@@ -1,4 +1,4 @@
-import { BarkType, Billboard, LeafType, TreeType } from './enums';
+import { BarkType, Billboard, LeafType, TreeType } from "./enums";
 
 export default class TreeOptions {
   constructor() {
@@ -44,8 +44,8 @@ export default class TreeOptions {
 
       // External force encouraging tree growth in a particular direction
       force: {
-        direction: { x: 0, y: 1, z: 0 },
-        strength: 0.01,
+        direction: { x: 0.5, y: 1, z: 0 },
+        strength: 0.05,
       },
 
       // Amount of curling/twisting at each branch level
@@ -182,12 +182,12 @@ export default class TreeOptions {
 
   /**
    * Copies the values from source into this object
-   * @param {TreeOptions} source 
+   * @param {TreeOptions} source
    */
   copy(source, target = this) {
     for (let key in source) {
       if (source.hasOwnProperty(key) && target.hasOwnProperty(key)) {
-        if (typeof source[key] === 'object' && source[key] !== null) {
+        if (typeof source[key] === "object" && source[key] !== null) {
           this.copy(source[key], target[key]);
         } else {
           target[key] = source[key];

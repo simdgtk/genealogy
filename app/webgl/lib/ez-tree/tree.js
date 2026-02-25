@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OBB } from "three/examples/jsm/math/OBB";
 import RNG from "./rng";
 import { Branch } from "./branch";
 import { Billboard, TreeType } from "./enums";
@@ -6,6 +7,7 @@ import TreeOptions from "./options";
 import { loadPreset } from "./presets/index";
 import { getBarkTexture, getLeafTexture } from "./textures";
 import { Trellis } from "./trellis";
+// import { Portrait } from "./Portrait.ts";
 import { Portrait } from "./portrait";
 
 export class Tree extends THREE.Group {
@@ -56,12 +58,14 @@ export class Tree extends THREE.Group {
    */
   constructor(options = new TreeOptions()) {
     super();
+    this.portrait = new Portrait();
     this.name = "Tree";
     this.branchesMesh = new THREE.Mesh();
     this.leavesMesh = new THREE.Mesh();
     this.trellisMesh = null;
     this.add(this.branchesMesh);
     this.add(this.leavesMesh);
+    this.add(this.portrait);
     this.options = options;
   }
 
@@ -71,7 +75,6 @@ export class Tree extends THREE.Group {
    * Generate a new tree
    */
   generate() {
-
     // Clean up old geometry
     this.branches = {
       verts: [],
@@ -87,6 +90,16 @@ export class Tree extends THREE.Group {
       indices: [],
       uvs: [],
     };
+
+    // Clean up old portraits
+    if (this.portraits) {
+      this.portraits.forEach((p) => {
+        this.remove(p);
+        p.geometry.dispose();
+        p.material.dispose();
+      });
+    }
+    this.portraits = [];
 
     this.rng = new RNG(this.options.seed);
 
@@ -127,14 +140,17 @@ export class Tree extends THREE.Group {
 
     // créer un cube à l'origine de la branche
     const portrait = new Portrait();
-    portrait.material.color.setHex(
-      branch.level === this.options.branch.levels ? 0xff0000 : 0x00ff00,
-    );
+
+    // portrait.userData.obb = new OBB();
+    // portrait.material.color.setHex(
+    //   branch.level === this.options.branch.levels - 2 ? 0xff0000 : 0x00ff00,
+    // );
     portrait.position.copy(sectionOrigin);
     this.add(portrait);
+    this.portraits.push(portrait);
 
     let sectionLength =
-      branch.length / 
+      branch.length /
       branch.sectionCount /
       (this.options.type === "Deciduous" ? this.options.branch.levels - 1 : 1);
 
@@ -162,8 +178,12 @@ export class Tree extends THREE.Group {
 
       // Create the segments that make up this section.
       let first;
+      // window.console.log(branch.segmentCount);
       for (let j = 0; j < branch.segmentCount; j++) {
-        let angle = (2.0 * Math.PI * j) / branch.segmentCount;
+        let angle = (2.0 * Math.PI * j) / 4;
+        // angle = 7;
+        window.angle = angle;
+        // let angle = 0;
 
         // Create the segment vertex
         const vertex = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle))
@@ -208,11 +228,11 @@ export class Tree extends THREE.Group {
       // Perturb the orientation of the next section randomly. The higher the
       // gnarliness, the larger potential perturbation
       const gnarliness =
-        Math.max(1, 1 / Math.sqrt(sectionRadius)) *
+        Math.max(1, 1 / Math.sqrt(1)) *
         this.options.branch.gnarliness[branch.level];
 
       sectionOrientation.x += this.rng.random(gnarliness, -gnarliness);
-      sectionOrientation.z += this.rng.random(gnarliness, -gnarliness);
+      // sectionOrientation.x += this.rng.random(gnarliness);
 
       // Apply growth force to the branch
       const qSection = new THREE.Quaternion().setFromEuler(sectionOrientation);
@@ -273,7 +293,7 @@ export class Tree extends THREE.Group {
           ),
         );
       } else {
-        this.generateLeaf(lastSection.origin, lastSection.orientation);
+        // this.generateLeaf(lastSection.origin, lastSection.orientation);
       }
     }
 
@@ -287,6 +307,8 @@ export class Tree extends THREE.Group {
         sections,
       );
     }
+
+    // box models
   }
 
   /**
@@ -446,7 +468,7 @@ export class Tree extends THREE.Group {
         q3.multiply(q2.multiply(q1)),
       );
 
-      this.generateLeaf(leafOrigin, leafOrientation);
+      // this.generateLeaf(leafOrigin, leafOrientation);
     }
   }
 
@@ -732,5 +754,79 @@ export class Tree extends THREE.Group {
 
   get triangleCount() {
     return (this.branches.indices.length + this.leaves.indices.length) / 3;
+  }
+
+  /**
+   * Update the portraits to face the camera
+   * @param {THREE.Quaternion} rotation
+   */
+  updatePortraits(rotation) {
+    if (this.portraits) {
+      // Create a temporary quaternion to hold the inverse of the parent's world rotation
+      const parentWorldQuat = new THREE.Quaternion();
+      this.getWorldQuaternion(parentWorldQuat);
+      const invParent = parentWorldQuat.invert();
+
+      this.portraits.forEach((portrait) => {
+        // We want the portrait's world rotation to match the camera's rotation.
+        // If the portrait is a child of this tree, its local rotation needs to be composed properly.
+        // We want: portrait.worldQuat == camera.quat
+        // Since portrait.worldQuat = parent.worldQuat * portrait.localQuat
+        // portrait.localQuat = inv(parent.worldQuat) * camera.quat
+
+        portrait.quaternion.copy(invParent).multiply(rotation);
+      });
+    }
+  }
+
+  // créer les OBB pour les portraits
+  createBoxModels() {
+    this.portraits.forEach((portrait) => {
+      portrait.geometry.computeBoundingBox();
+      portrait.userData.obb = new OBB().fromBox3(portrait.geometry.boundingBox);
+      console.log(portrait.userData.obb);
+    });
+  }
+
+  // classes ajoutés
+  animate(portraits = this.portraits) {
+    portraits.forEach((portrait) => {
+      portrait.material.color.set(0x00ff00);
+      portrait.updateMatrixWorld(true);
+
+      const smallerBox = portrait.geometry.boundingBox.clone();
+      // scale box down by 50% for collision checks
+      smallerBox.min.multiplyScalar(0.5);
+      smallerBox.max.multiplyScalar(0.5);
+
+      portrait.userData.obb.fromBox3(smallerBox);
+      portrait.userData.obb.applyMatrix4(portrait.matrixWorld);
+    });
+
+    portraits.forEach((portrait) => {
+      portraits.forEach((otherPortrait) => {
+        if (
+          portrait !== otherPortrait &&
+          portrait.userData.obb.intersectsOBB(otherPortrait.userData.obb)
+        ) {
+          portrait.material.color.set(0xff0000);
+          if (typeof window !== "undefined" && !window.__debugOBB) {
+            window.__debugOBB = true;
+            fetch("/api/log", {
+              method: "POST",
+              body: JSON.stringify({
+                p1_center: portrait.userData.obb.center,
+                p2_center: otherPortrait.userData.obb.center,
+                p1_half: portrait.userData.obb.halfSize,
+                p2_half: otherPortrait.userData.obb.halfSize,
+                p1_pos: portrait.position,
+                p2_pos: otherPortrait.position,
+              }),
+              headers: { "Content-Type": "application/json" },
+            }).catch(() => {});
+          }
+        }
+      });
+    });
   }
 }

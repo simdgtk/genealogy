@@ -2,24 +2,30 @@ import * as THREE from "three";
 import Config from "./Config";
 import Tree from "./components/Tree";
 import BackgroundPlane from "./components/BackgroundPlane";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+// import { Portrait } from "./lib/ez-tree/portrait";
+import { Portrait } from "./lib/ez-tree/portrait";
 
 export default class SceneManager {
   canvas: HTMLCanvasElement;
   scene!: THREE.Scene;
   camera!: THREE.OrthographicCamera;
   renderer!: THREE.WebGLRenderer;
-  clock: THREE.Clock;
+  timer: THREE.Timer;
   tree!: Tree;
+  portrait!: Portrait;
   backgroundPlane!: BackgroundPlane;
+  controls!: OrbitControls;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.clock = new THREE.Clock();
+    this.timer = new THREE.Timer();
 
     this.initScene();
     this.initCamera();
     this.initLights();
     this.initRenderer();
+    this.initControls();
     this.initComponents();
     this.addEventListeners();
     this.animate();
@@ -62,8 +68,17 @@ export default class SceneManager {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   }
 
+  initControls() {
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.enableZoom = false;
+    this.controls.target.set(0, 0, 0);
+  }
+
   initComponents() {
     this.tree = new Tree(this.scene);
+    this.portrait = new Portrait();
+    // this.scene.add(this.portrait);
     this.backgroundPlane = new BackgroundPlane(this.scene);
   }
 
@@ -90,13 +105,16 @@ export default class SceneManager {
   }
 
   animate() {
-    const delta = this.clock.getDelta();
-    // const time = this.clock.getElapsedTime()
+    const delta = this.timer.getDelta();
+    // const time = this.timer.getElapsedTime()
 
-    if (this.tree) this.tree.update(delta);
     // if (this.backgroundPlane) this.backgroundPlane.update(delta)
 
     this.renderer.render(this.scene, this.camera);
+    if (this.controls) this.controls.update();
+
+    if (this.tree) this.tree.update(delta, this.camera.quaternion);
+    this.portrait.animate(this.camera.quaternion);
     requestAnimationFrame(this.animate.bind(this));
   }
 
