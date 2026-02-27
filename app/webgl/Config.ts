@@ -1,11 +1,19 @@
-export default {
+import type { TreeOptions } from "./lib/ez-tree/types";
+
+export interface AppConfig {
+  width: number;
+  height: number;
+  tree: TreeOptions;
+}
+
+const config: AppConfig = {
   width: 1200,
   height: 600,
 
   tree: {
     seed: 1388377,
     branch: {
-      levels: 5,
+      levels: 2,
       angle: {
         1: 65,
         2: 60,
@@ -21,14 +29,27 @@ export default {
         4: 12,
         5: 7,
       },
-      children: {
-        0: 2,
-        1: 1,
-        2: 1,
-        3: 1,
-        4: 1,
-        5: 1,
+      start: {
+        [1]: 1,
+        [2]: 1,
+        [3]: 1,
+        [4]: 1,
+        [5]: 1,
       },
+      children: (level: number, path: number[]) => {
+        if (level === 0) {
+          return 1;
+        }
+
+        if (level === 1) {
+          const branchIndex = path[path.length - 1];
+          if (branchIndex === 0) return 2;
+          if (branchIndex === 1) return 0;
+        }
+
+        return 0;
+      },
+
       gnarliness: {
         0: 0.15,
         1: 0.25,
@@ -43,13 +64,6 @@ export default {
         2: 0.8,
         3: 0.5,
         4: 0.3,
-        5: 0.2,
-      },
-      start: {
-        1: 0.3,
-        2: 0.2,
-        3: 0.2,
-        4: 0.2,
         5: 0.2,
       },
       taper: {
@@ -74,3 +88,5 @@ export default {
     },
   },
 };
+
+export default config;

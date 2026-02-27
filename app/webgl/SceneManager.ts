@@ -71,7 +71,7 @@ export default class SceneManager {
   initControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.enableZoom = false;
+    // this.controls.enableZoom = false;
     this.controls.target.set(0, 0, 0);
   }
 
@@ -114,8 +114,8 @@ export default class SceneManager {
     if (this.controls) this.controls.update();
 
     if (this.tree) this.tree.update(delta, this.camera.quaternion);
-    this.portrait.animate(this.camera.quaternion);
-    requestAnimationFrame(this.animate.bind(this));
+    if (this.portrait) this.portrait.animate(this.camera.quaternion);
+    if (this.animate) requestAnimationFrame(this.animate.bind(this));
   }
 
   destroy() {

@@ -91,6 +91,8 @@ export class Tree extends THREE.Group {
       uvs: [],
     };
 
+    this.allBranches = [];
+
     // Clean up old portraits
     if (this.portraits) {
       this.portraits.forEach((p) => {
@@ -103,6 +105,8 @@ export class Tree extends THREE.Group {
 
     this.rng = new RNG(this.options.seed);
 
+    this.branchQueue = [];
+
     // Create the trunk of the tree first
     this.branchQueue.push(
       new Branch(
@@ -113,6 +117,7 @@ export class Tree extends THREE.Group {
         0,
         this.options.branch.sections[0],
         this.options.branch.segments[0],
+        [],
       ),
     );
 
@@ -124,6 +129,7 @@ export class Tree extends THREE.Group {
     this.createBranchesGeometry();
     this.createLeavesGeometry();
     this.createTrellis();
+    this.createBoxModels();
   }
 
   /**
@@ -142,9 +148,28 @@ export class Tree extends THREE.Group {
     const portrait = new Portrait();
 
     // portrait.userData.obb = new OBB();
-    // portrait.material.color.setHex(
-    //   branch.level === this.options.branch.levels - 2 ? 0xff0000 : 0x00ff00,
-    // );
+    let color = 0xffffff;
+    switch (branch.level) {
+      case 0:
+        color = 0xff0000;
+        break;
+      case 1:
+        color = 0x00ff00;
+        break;
+      case 2:
+        color = 0x0000ff;
+        break;
+      case 3:
+        color = 0xffff00;
+        break;
+      case 4:
+        color = 0xff00ff;
+        break;
+      case 5:
+        color = 0x00ffff;
+        break;
+    }
+    portrait.material.color.setHex(color);
     portrait.position.copy(sectionOrigin);
     this.add(portrait);
     this.portraits.push(portrait);
@@ -176,13 +201,14 @@ export class Tree extends THREE.Group {
         sectionRadius *= 1 - i / branch.sectionCount;
       }
 
+      // Clamp sectionRadius to avoid Infinity/NaN errors in quaternion rotations
+      sectionRadius = Math.max(0.0001, sectionRadius);
+
       // Create the segments that make up this section.
       let first;
       // window.console.log(branch.segmentCount);
       for (let j = 0; j < branch.segmentCount; j++) {
-        let angle = (2.0 * Math.PI * j) / 4;
-        // angle = 7;
-        window.angle = angle;
+        let angle = (2.0 * Math.PI * j) / branch.segmentCount;
         // let angle = 0;
 
         // Create the segment vertex
@@ -273,6 +299,17 @@ export class Tree extends THREE.Group {
 
     this.generateBranchIndices(indexOffset, branch);
 
+    // portrait à la fin de la branche
+    const endPortrait = new Portrait();
+    endPortrait.material.color.setHex(color);
+    if (sections.length > 0) {
+      endPortrait.position.copy(sections[sections.length - 1].origin);
+    } else {
+      endPortrait.position.copy(sectionOrigin);
+    }
+    this.add(endPortrait);
+    this.portraits.push(endPortrait);
+
     // Deciduous trees have a terminal branch that grows out of the
     // end of the parent branch
     if (this.options.type === "deciduous") {
@@ -290,6 +327,7 @@ export class Tree extends THREE.Group {
             // since the child branch is growing from the end of the parent branch
             branch.sectionCount,
             branch.segmentCount,
+            [...branch.path, -1],
           ),
         );
       } else {
@@ -301,10 +339,46 @@ export class Tree extends THREE.Group {
     if (branch.level === this.options.branch.levels) {
       this.generateLeaves(sections);
     } else if (branch.level < this.options.branch.levels) {
+      let childCount = 0;
+      const childrenConfig = this.options.branch.children;
+      if (typeof childrenConfig === "function") {
+        childCount = childrenConfig(branch.level, branch.path);
+      } else if (Array.isArray(childrenConfig)) {
+        let configNode = childrenConfig;
+        for (let i = 0; i < branch.path.length; i++) {
+          const pathIndex = branch.path[i];
+          if (pathIndex === -1) {
+            configNode = 0;
+            break;
+          }
+          if (Array.isArray(configNode) && pathIndex + 1 < configNode.length) {
+            configNode = configNode[pathIndex + 1];
+          } else {
+            configNode = 0;
+            break;
+          }
+        }
+        childCount = Array.isArray(configNode)
+          ? typeof configNode[0] === "number"
+            ? configNode[0]
+            : 0
+          : typeof configNode === "number"
+            ? configNode
+            : 0;
+      } else if (
+        childrenConfig !== null &&
+        typeof childrenConfig === "object"
+      ) {
+        childCount = childrenConfig[branch.level] || 0;
+      } else {
+        childCount = childrenConfig || 0;
+      }
+
       this.generateChildBranches(
-        this.options.branch.children[branch.level],
+        childCount,
         branch.level + 1,
         sections,
+        branch.path,
       );
     }
 
@@ -320,12 +394,15 @@ export class Tree extends THREE.Group {
    *  orientation: THREE.Euler,
    *  radius: number
    * }[]} sections The parent branch's sections
+   * @param {number[]} parentPath The path of the parent branch
    * @returns
    */
-  generateChildBranches(count, level, sections) {
+  generateChildBranches(count, level, sections, parentPath = []) {
     const radialOffset = this.rng.random();
 
     for (let i = 0; i < count; i++) {
+      const childPath = [...parentPath, i];
+
       // Determine how far along the length of the parent branch the child
       // branch should originate from (0 to 1)
       let childBranchStart = this.rng.random(
@@ -399,6 +476,7 @@ export class Tree extends THREE.Group {
           level,
           this.options.branch.sections[level],
           this.options.branch.segments[level],
+          childPath,
         ),
       );
     }
@@ -784,49 +862,49 @@ export class Tree extends THREE.Group {
     this.portraits.forEach((portrait) => {
       portrait.geometry.computeBoundingBox();
       portrait.userData.obb = new OBB().fromBox3(portrait.geometry.boundingBox);
-      console.log(portrait.userData.obb);
+      // console.log(portrait.userData.obb);
     });
   }
 
-  // classes ajoutés
+  // classes ajoutées
   animate(portraits = this.portraits) {
     portraits.forEach((portrait) => {
-      portrait.material.color.set(0x00ff00);
-      portrait.updateMatrixWorld(true);
+      // // portrait.material.color.set(0x00ff00);
+      // portrait.updateMatrixWorld(true);
 
-      const smallerBox = portrait.geometry.boundingBox.clone();
-      // scale box down by 50% for collision checks
-      smallerBox.min.multiplyScalar(0.5);
-      smallerBox.max.multiplyScalar(0.5);
+      // const smallerBox = portrait.geometry.boundingBox.clone();
+      // // scale box down by 50% for collision checks
+      // smallerBox.min.multiplyScalar(0.5);
+      // smallerBox.max.multiplyScalar(0.5);
 
-      portrait.userData.obb.fromBox3(smallerBox);
-      portrait.userData.obb.applyMatrix4(portrait.matrixWorld);
+      // portrait.userData.obb.fromBox3(smallerBox);
+      // portrait.userData.obb.applyMatrix4(portrait.matrixWorld);
     });
 
-    portraits.forEach((portrait) => {
-      portraits.forEach((otherPortrait) => {
-        if (
-          portrait !== otherPortrait &&
-          portrait.userData.obb.intersectsOBB(otherPortrait.userData.obb)
-        ) {
-          portrait.material.color.set(0xff0000);
-          if (typeof window !== "undefined" && !window.__debugOBB) {
-            window.__debugOBB = true;
-            fetch("/api/log", {
-              method: "POST",
-              body: JSON.stringify({
-                p1_center: portrait.userData.obb.center,
-                p2_center: otherPortrait.userData.obb.center,
-                p1_half: portrait.userData.obb.halfSize,
-                p2_half: otherPortrait.userData.obb.halfSize,
-                p1_pos: portrait.position,
-                p2_pos: otherPortrait.position,
-              }),
-              headers: { "Content-Type": "application/json" },
-            }).catch(() => {});
-          }
-        }
-      });
-    });
+    // portraits.forEach((portrait) => {
+    //   portraits.forEach((otherPortrait) => {
+    //     if (
+    //       portrait !== otherPortrait &&
+    //       portrait.userData.obb.intersectsOBB(otherPortrait.userData.obb)
+    //     ) {
+    //       portrait.material.color.set(0xff0000);
+    //       if (typeof window !== "undefined" && !window.__debugOBB) {
+    //         window.__debugOBB = true;
+    //         fetch("/api/log", {
+    //           method: "POST",
+    //           body: JSON.stringify({
+    //             p1_center: portrait.userData.obb.center,
+    //             p2_center: otherPortrait.userData.obb.center,
+    //             p1_half: portrait.userData.obb.halfSize,
+    //             p2_half: otherPortrait.userData.obb.halfSize,
+    //             p1_pos: portrait.position,
+    //             p2_pos: otherPortrait.position,
+    //           }),
+    //           headers: { "Content-Type": "application/json" },
+    //         }).catch(() => {});
+    //       }
+    //     }
+    //   });
+    // });
   }
 }

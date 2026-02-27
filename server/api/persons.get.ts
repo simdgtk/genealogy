@@ -1,10 +1,9 @@
 import { Person } from "../models/Person";
-import { Relative } from "../models/Relative";
 
 export default defineEventHandler(async (event) => {
   try {
-    Relative;
-    const persons = await Person.find().populate("relativeId");
+    Person;
+    const persons = await Person.find({_id: { $ne: null } }).exec();
     return persons;
   } catch (error: any) {
     console.error("Error fetching persons:", error);
