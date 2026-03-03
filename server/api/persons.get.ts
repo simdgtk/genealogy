@@ -1,9 +1,21 @@
 import { Person } from "../models/Person";
 
 export default defineEventHandler(async (event) => {
+  const query = getQuery(event);
+  const familyId = query.familyId;
+
   try {
-    Person;
-    const persons = await Person.find({_id: { $ne: null } }).exec();
+    const filter: any = { _id: { $ne: null } };
+    if (familyId && familyId !== "undefined") {
+      filter.familyId = familyId;
+    } else if (familyId === "undefined") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "familyId is undefined",
+      });
+    }
+
+    const persons = await Person.find(filter).exec();
     return persons;
   } catch (error: any) {
     console.error("Error fetching persons:", error);

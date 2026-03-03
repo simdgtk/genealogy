@@ -20,9 +20,17 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { useRoute } from "vue-router";
 import PersonForm from "~/components/PersonForm.vue";
 import PersonList from "~/components/PersonList.vue";
 import type { Person } from "~/types/person";
+
+const route = useRoute();
+const familyId = route.query.familyId as string;
+
+if (!familyId) {
+  navigateTo("/dashboard");
+}
 
 const texts = {
   ancestor: "Ajouter l'ancêtre",
@@ -33,7 +41,7 @@ const texts = {
   deleteRelative: "Supprimer le proche"
 };
 
-const persons = ref<Person[]>(await $fetch<Person[]>("/api/persons") || []);
+const persons = ref<Person[]>(await $fetch<Person[]>(`/api/persons?familyId=${familyId}`) || []);
 
 const selectedPerson = ref<Person | null>(null);
 
@@ -51,6 +59,7 @@ const handleSavePerson = async (personData: any) => {
     if (personData.deathDate) formData.append("deathDate", personData.deathDate);
     if (personData.gender) formData.append("gender", personData.gender);
     if (personData.parent1Id) formData.append("parent1Id", String(personData.parent1Id));
+    formData.append("familyId", familyId);
 
     if (personData.image) {
       formData.append("image", personData.image);
@@ -80,7 +89,7 @@ const handleSavePerson = async (personData: any) => {
         persons.value.push(result);
       }
     } else {
-      persons.value = await $fetch<Person[]>("/api/persons") || [];
+      persons.value = await $fetch<Person[]>(`/api/persons?familyId=${familyId}`) || [];
     }
 
     selectedPerson.value = null;

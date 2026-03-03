@@ -19,6 +19,7 @@
     "nuxt": "^4.3.1",
     "nuxt-mongoose": "^1.0.6",
     "three": "^0.183.0",
+    "troika-three-text": "^0.52.4",
     "tweakpane": "^4.0.5",
     "vue": "^3.5.28",
     "vue-router": "^4.6.4"

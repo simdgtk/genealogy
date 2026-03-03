@@ -2,9 +2,10 @@ import * as THREE from "three";
 import Config from "./Config";
 import Tree from "./components/Tree";
 import BackgroundPlane from "./components/BackgroundPlane";
+import Border from "./components/Border";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
-import { Portrait } from "./lib/ez-tree/portrait"
+import { Portrait } from "./lib/ez-tree/portrait";
 
 export default class SceneManager {
   canvas: HTMLCanvasElement;
@@ -16,6 +17,7 @@ export default class SceneManager {
   tree!: Tree;
   portrait!: Portrait;
   backgroundPlane!: BackgroundPlane;
+  border!: Border;
   controls!: OrbitControls;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -48,6 +50,7 @@ export default class SceneManager {
       100,
     );
     this.camera.position.z = 10;
+    this.scene.add(this.camera);
   }
 
   initLights() {
@@ -84,7 +87,7 @@ export default class SceneManager {
   initControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    // this.controls.enableZoom = false;
+    this.controls.enableZoom = false;
     this.controls.target.set(0, 0, 0);
   }
 
@@ -93,6 +96,7 @@ export default class SceneManager {
     // this.portrait = new Portrait();
     // this.scene.add(this.portrait);
     this.backgroundPlane = new BackgroundPlane(this.scene);
+    this.border = new Border(this.camera, -1); // car caméra orthographique, frustumSize / 2
   }
 
   addEventListeners() {
@@ -115,6 +119,10 @@ export default class SceneManager {
 
     if (this.backgroundPlane) {
       this.backgroundPlane.resize();
+    }
+
+    if (this.border) {
+      this.border.resize();
     }
   }
 

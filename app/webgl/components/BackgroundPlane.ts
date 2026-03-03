@@ -12,15 +12,13 @@ export default class BackgroundPlane {
   }
 
   init() {
-    // Base geometry with 2:1 aspect ratio
-    this.geometry = new THREE.PlaneGeometry(2, 1) 
+    this.geometry = new THREE.PlaneGeometry(1, 1) 
     this.material = new THREE.MeshBasicMaterial({ color: 0xcccccc, side: THREE.DoubleSide })
     this.mesh = new THREE.Mesh(this.geometry, this.material)
     
-    // Position it behind the cube
     this.mesh.position.z = -5
     
-    // this.scene.add(this.mesh)
+    this.scene.add(this.mesh)
     this.resize()
   }
 

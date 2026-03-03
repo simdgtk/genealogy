@@ -4,9 +4,22 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 
 import { Person } from "../models/Person";
+import { auth } from "./auth/auth_file/auth";
+import { Family } from "../models/Family";
 
 export default defineEventHandler(async (event) => {
   try {
+    const session = await auth.api.getSession({
+      headers: event.headers,
+    });
+
+    if (!session) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Unauthorized",
+      });
+    }
+
     const formData = await readMultipartFormData(event);
     if (!formData) throw new Error("Aucune donnée reçue");
 
@@ -53,6 +66,30 @@ export default defineEventHandler(async (event) => {
 
     if (mediaUrl) {
       personData.mediaUrl = mediaUrl;
+    }
+
+    const person = await Person.findById(personId);
+    if (!person) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Personne non trouvée",
+      });
+    }
+
+    if (!person.familyId) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Cette personne n'est rattachée à aucune famille",
+      });
+    }
+
+    const family = await Family.findById(person.familyId);
+    if (!family || family.creatorId !== session.user.id) {
+      throw createError({
+        statusCode: 403,
+        statusMessage:
+          "Vous n'avez pas la permission de modifier cette personne",
+      });
     }
 
     const updatedPerson = await Person.findByIdAndUpdate(personId, personData, {

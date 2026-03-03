@@ -4,9 +4,22 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 
 import { Person } from "../models/Person";
+import { auth } from "./auth/auth_file/auth";
+import { Family } from "../models/Family";
 
 export default defineEventHandler(async (event) => {
   try {
+    const session = await auth.api.getSession({
+      headers: event.headers,
+    });
+
+    if (!session) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Unauthorized",
+      });
+    }
+
     const formData = await readMultipartFormData(event);
     if (!formData) throw new Error("Aucune donnée reçue");
 
@@ -43,6 +56,23 @@ export default defineEventHandler(async (event) => {
     if (mediaUrl) {
       personData.mediaUrl = mediaUrl;
     }
+
+    if (!personData.familyId) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "familyId est requis",
+      });
+    }
+
+    const family = await Family.findById(personData.familyId);
+    if (!family || family.creatorId !== session.user.id) {
+      throw createError({
+        statusCode: 403,
+        statusMessage:
+          "Vous n'avez pas la permission d'ajouter des personnes à cette famille",
+      });
+    }
+
     const newPerson = await Person.create(personData);
     return newPerson;
   } catch (error) {

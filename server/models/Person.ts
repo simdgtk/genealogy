@@ -1,15 +1,16 @@
-import { defineMongooseModel } from '#nuxt/mongoose'
-import { Schema } from 'mongoose'
+import { defineMongooseModel } from "#nuxt/mongoose";
+import { Schema } from "mongoose";
 
 export const Person = defineMongooseModel({
-  name: 'Person',
+  name: "Person",
   schema: {
     surname: { type: String, required: true },
     name: { type: String, required: false },
     birthDate: { type: Date, required: false },
     deathDate: { type: Date, required: false },
     gender: { type: String, required: false },
-    parent1Id: { type: Schema.Types.ObjectId, ref: 'Person', default: null },
-    mediaUrl: { type: String, required: false }, 
-  }
-})
+    parent1Id: { type: Schema.Types.ObjectId, ref: "Person", default: null },
+    mediaUrl: { type: String, required: false },
+    familyId: { type: Schema.Types.ObjectId, ref: "Family", default: null },
+  },
+});
