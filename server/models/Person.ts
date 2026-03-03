@@ -10,6 +10,6 @@ export const Person = defineMongooseModel({
     deathDate: { type: Date, required: false },
     gender: { type: String, required: false },
     parent1Id: { type: Schema.Types.ObjectId, ref: 'Person', default: null },
-    parent2Id: { type: Schema.Types.ObjectId, ref: 'Person', default: null }
+    mediaUrl: { type: String, required: false }, 
   }
 })

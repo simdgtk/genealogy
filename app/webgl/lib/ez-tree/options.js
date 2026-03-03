@@ -110,6 +110,11 @@ export default class TreeOptions {
         2: 0,
         3: 0,
       },
+
+      // Whether to generate a terminal branch in deciduous mode
+      terminal: true,
+
+      getMetadata: null,
     };
 
     // Leaf parameters

@@ -58,15 +58,15 @@ export class Tree extends THREE.Group {
    */
   constructor(options = new TreeOptions()) {
     super();
-    this.portrait = new Portrait();
+    // this.portrait = new Portrait();
     this.name = "Tree";
     this.branchesMesh = new THREE.Mesh();
     this.leavesMesh = new THREE.Mesh();
     this.trellisMesh = null;
     this.add(this.branchesMesh);
     this.add(this.leavesMesh);
-    this.add(this.portrait);
     this.options = options;
+    this.portraits = [];
   }
 
   // ... (existing update, loadPreset, loadFromJson methods)
@@ -96,9 +96,13 @@ export class Tree extends THREE.Group {
     // Clean up old portraits
     if (this.portraits) {
       this.portraits.forEach((p) => {
-        this.remove(p);
-        p.geometry.dispose();
-        p.material.dispose();
+        if (p.dispose) {
+          p.dispose();
+        } else {
+          this.remove(p);
+          p.geometry.dispose();
+          p.material.dispose();
+        }
       });
     }
     this.portraits = [];
@@ -145,7 +149,7 @@ export class Tree extends THREE.Group {
     let sectionOrigin = branch.origin.clone();
 
     // créer un cube à l'origine de la branche
-    const portrait = new Portrait();
+    // const portrait = new Portrait();
 
     // portrait.userData.obb = new OBB();
     let color = 0xffffff;
@@ -169,15 +173,17 @@ export class Tree extends THREE.Group {
         color = 0x00ffff;
         break;
     }
-    portrait.material.color.setHex(color);
-    portrait.position.copy(sectionOrigin);
-    this.add(portrait);
-    this.portraits.push(portrait);
+    // portrait.material.color.setHex(color);
+    // portrait.position.copy(sectionOrigin);
+    // this.add(portrait);
+    // this.portraits.push(portrait);
 
     let sectionLength =
       branch.length /
       branch.sectionCount /
-      (this.options.type === "Deciduous" ? this.options.branch.levels - 1 : 1);
+      (this.options.type === TreeType.Deciduous
+        ? this.options.branch.levels - 1
+        : 1);
 
     // This information is used for generating child branches after the branch
     // geometry has been constructed
@@ -299,20 +305,38 @@ export class Tree extends THREE.Group {
 
     this.generateBranchIndices(indexOffset, branch);
 
-    // portrait à la fin de la branche
-    const endPortrait = new Portrait();
-    endPortrait.material.color.setHex(color);
-    if (sections.length > 0) {
-      endPortrait.position.copy(sections[sections.length - 1].origin);
-    } else {
-      endPortrait.position.copy(sectionOrigin);
+    // Portrait à la fin de la section de la branche.
+    // On ne crée le portrait que pour le premier segment d'une personne (pas les prolongements -1)
+    const isContinuation =
+      branch.path.length > 0 && branch.path[branch.path.length - 1] === -1;
+    const metadataFetcher = this.options.branch.getMetadata;
+    const metadata =
+      metadataFetcher && !isContinuation ? metadataFetcher(branch.path) : null;
+
+    if (metadata) {
+      const portrait = new Portrait(
+        metadata.name,
+        metadata.surname,
+        null,
+        metadata.gender,
+      );
+
+      const positionOrigin =
+        sections.length > 0
+          ? sections[sections.length - 1].origin
+          : sectionOrigin;
+      portrait.position.copy(positionOrigin);
+
+      this.add(portrait);
+      this.portraits.push(portrait);
     }
-    this.add(endPortrait);
-    this.portraits.push(endPortrait);
 
     // Deciduous trees have a terminal branch that grows out of the
     // end of the parent branch
-    if (this.options.type === "deciduous") {
+    if (
+      this.options.type === TreeType.Deciduous &&
+      this.options.branch.terminal !== false
+    ) {
       const lastSection = sections[sections.length - 1];
 
       if (branch.level < this.options.branch.levels) {
@@ -871,12 +895,10 @@ export class Tree extends THREE.Group {
     portraits.forEach((portrait) => {
       // // portrait.material.color.set(0x00ff00);
       // portrait.updateMatrixWorld(true);
-
       // const smallerBox = portrait.geometry.boundingBox.clone();
       // // scale box down by 50% for collision checks
       // smallerBox.min.multiplyScalar(0.5);
       // smallerBox.max.multiplyScalar(0.5);
-
       // portrait.userData.obb.fromBox3(smallerBox);
       // portrait.userData.obb.applyMatrix4(portrait.matrixWorld);
     });

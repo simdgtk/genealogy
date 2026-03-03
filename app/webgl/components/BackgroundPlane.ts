@@ -20,7 +20,7 @@ export default class BackgroundPlane {
     // Position it behind the cube
     this.mesh.position.z = -5
     
-    this.scene.add(this.mesh)
+    // this.scene.add(this.mesh)
     this.resize()
   }
 

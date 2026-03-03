@@ -59,13 +59,13 @@ export default class PaneManager {
       }
     };
 
-    bindLevelProps(this.instance.options.branch.length, "length", "Length");
-    bindLevelProps(
-      this.instance.options.branch.children,
-      "children",
-      "Children",
-      { step: 1 },
-    );
+    // bindLevelProps(this.instance.options.branch.length, "length", "Length");
+    // bindLevelProps(
+    //   this.instance.options.branch.children,
+    //   "children",
+    //   "Children",
+    //   { step: 1 },
+    // );
     bindLevelProps(this.instance.options.branch.radius, "radius", "Radius");
     bindLevelProps(
       this.instance.options.branch.sections,

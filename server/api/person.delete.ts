@@ -9,10 +9,10 @@ export default defineEventHandler(async (event) => {
     }
     return deletedPerson;
   } catch (error: any) {
-    console.error("Error creating person:", error);
+    console.error("Error deleting person:", error);
     throw createError({
       statusCode: 400,
-      statusMessage: "Person could not be created",
+      statusMessage: "Person could not be deleted",
       data: { message: error.message, stack: error.stack },
     });
   }

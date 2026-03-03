@@ -3,14 +3,15 @@ import Config from "./Config";
 import Tree from "./components/Tree";
 import BackgroundPlane from "./components/BackgroundPlane";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-// import { Portrait } from "./lib/ez-tree/portrait";
-import { Portrait } from "./lib/ez-tree/portrait";
+import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
+import { Portrait } from "./lib/ez-tree/portrait"
 
 export default class SceneManager {
   canvas: HTMLCanvasElement;
   scene!: THREE.Scene;
   camera!: THREE.OrthographicCamera;
   renderer!: THREE.WebGLRenderer;
+  cssRenderer!: CSS2DRenderer;
   timer: THREE.Timer;
   tree!: Tree;
   portrait!: Portrait;
@@ -66,6 +67,18 @@ export default class SceneManager {
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    this.cssRenderer = new CSS2DRenderer();
+    this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
+    this.cssRenderer.domElement.style.position = "absolute";
+    this.cssRenderer.domElement.style.top = "0px";
+    this.cssRenderer.domElement.style.pointerEvents = "none";
+
+    if (this.canvas.parentElement) {
+      this.canvas.parentElement.appendChild(this.cssRenderer.domElement);
+    } else {
+      document.body.appendChild(this.cssRenderer.domElement);
+    }
   }
 
   initControls() {
@@ -77,7 +90,7 @@ export default class SceneManager {
 
   initComponents() {
     this.tree = new Tree(this.scene);
-    this.portrait = new Portrait();
+    // this.portrait = new Portrait();
     // this.scene.add(this.portrait);
     this.backgroundPlane = new BackgroundPlane(this.scene);
   }
@@ -98,6 +111,7 @@ export default class SceneManager {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
 
     if (this.backgroundPlane) {
       this.backgroundPlane.resize();
@@ -111,6 +125,7 @@ export default class SceneManager {
     // if (this.backgroundPlane) this.backgroundPlane.update(delta)
 
     this.renderer.render(this.scene, this.camera);
+    this.cssRenderer.render(this.scene, this.camera);
     if (this.controls) this.controls.update();
 
     if (this.tree) this.tree.update(delta, this.camera.quaternion);
@@ -121,5 +136,10 @@ export default class SceneManager {
   destroy() {
     window.removeEventListener("resize", this.onResize.bind(this));
     this.renderer.dispose();
+    if (this.cssRenderer.domElement.parentElement) {
+      this.cssRenderer.domElement.parentElement.removeChild(
+        this.cssRenderer.domElement,
+      );
+    }
   }
 }

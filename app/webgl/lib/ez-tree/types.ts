@@ -28,6 +28,8 @@ export interface TreeOptions {
     start?: Record<number, number>;
     taper?: Record<number, number>;
     twist?: Record<number, number>;
+    terminal?: boolean;
+    getMetadata?: (path: number[]) => any;
   };
   leaves?: {
     type?: string;
