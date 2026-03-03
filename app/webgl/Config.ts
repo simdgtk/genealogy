@@ -7,7 +7,7 @@ export interface AppConfig {
 }
 
 const allPersons = async () => {
-  const res = await fetch("http://localhost:3000/api/persons");
+  const res = await fetch("/api/persons");
   const data = await res.json();
   return data;
 };

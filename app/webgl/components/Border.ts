@@ -48,6 +48,7 @@ export default class Border {
     patternTexture.wrapT = THREE.RepeatWrapping;
     patternTexture.colorSpace = THREE.SRGBColorSpace;
     patternTexture.repeat.set(1, 1);
+    // patternTexture.offset.set(0.5, 0);
     this.smallMaterial = new THREE.MeshBasicMaterial({
       map: patternTexture,
       side: THREE.DoubleSide,
@@ -169,5 +170,9 @@ export default class Border {
 
       texture.wrapT = THREE.ClampToEdgeWrapping;
     }
+  }
+
+  animate() {
+    
   }
 }
