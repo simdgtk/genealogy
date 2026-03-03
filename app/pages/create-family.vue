@@ -13,7 +13,6 @@ const handleCreateFamily = async () => {
         });
 
         if (res) {
-            // Success! Redirect to the family management page
             navigateTo(`/famille?familyId=${res._id}`);
         }
     } catch (error: any) {

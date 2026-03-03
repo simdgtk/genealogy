@@ -696,6 +696,7 @@ export class Tree extends THREE.Group {
       name: "branches",
       color: new THREE.Color(this.options.bark.tint),
       gradientMap: this.getGradientTexture(), // Use generated gradient map
+      depthTest: false,
     });
 
     if (this.options.bark.textured) {

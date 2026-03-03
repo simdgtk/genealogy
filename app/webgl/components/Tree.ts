@@ -1,13 +1,12 @@
 import * as THREE from "three";
 import { Tree as TreeLib } from "~/webgl/lib/ez-tree";
 import Config from "~/webgl/Config";
-import PaneManager from "~/webgl/PaneManager";
-// import { Portrait } from "~/webgl/lib/ez-tree/portrait";
+// import PaneManager from "~/webgl/PaneManager";
 
 export default class Tree {
   scene: THREE.Scene;
   instance!: TreeLib;
-  paneManager!: PaneManager;
+  // paneManager!: PaneManager;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -20,14 +19,14 @@ export default class Tree {
     tree.options.copy(Config.tree as any);
     tree.generate();
     this.instance = tree;
-    this.paneManager = new PaneManager(this.instance);
+    // this.paneManager = new PaneManager(this.instance);
 
     tree.scale.set(0.2, 0.2, 0.2);
-    tree.position.set(0, -5, 0);
+    tree.position.set(0, -4.8, 0);
     tree.rotation.y = Math.PI / 2;
 
     this.scene.add(tree);
-    this.paneManager.initPane();
+    // this.paneManager.initPane();
 
     this.instance.createBoxModels();
   }

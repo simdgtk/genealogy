@@ -1,7 +1,5 @@
 import * as THREE from "three";
-import Config from "./Config";
 import Tree from "./components/Tree";
-import BackgroundPlane from "./components/BackgroundPlane";
 import Border from "./components/Border";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
@@ -16,7 +14,6 @@ export default class SceneManager {
   timer: THREE.Timer;
   tree!: Tree;
   portrait!: Portrait;
-  backgroundPlane!: BackgroundPlane;
   border!: Border;
   controls!: OrbitControls;
 
@@ -88,6 +85,9 @@ export default class SceneManager {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.enableZoom = false;
+    this.controls.enablePan = false;
+    this.controls.minPolarAngle = Math.PI / 2;
+    this.controls.maxPolarAngle = Math.PI / 2;
     this.controls.target.set(0, 0, 0);
   }
 
@@ -95,7 +95,6 @@ export default class SceneManager {
     this.tree = new Tree(this.scene);
     // this.portrait = new Portrait();
     // this.scene.add(this.portrait);
-    this.backgroundPlane = new BackgroundPlane(this.scene);
     this.border = new Border(this.camera, -1); // car caméra orthographique, frustumSize / 2
   }
 
@@ -117,10 +116,6 @@ export default class SceneManager {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
 
-    if (this.backgroundPlane) {
-      this.backgroundPlane.resize();
-    }
-
     if (this.border) {
       this.border.resize();
     }
@@ -128,9 +123,6 @@ export default class SceneManager {
 
   animate() {
     const delta = this.timer.getDelta();
-    // const time = this.timer.getElapsedTime()
-
-    // if (this.backgroundPlane) this.backgroundPlane.update(delta)
 
     this.renderer.render(this.scene, this.camera);
     this.cssRenderer.render(this.scene, this.camera);

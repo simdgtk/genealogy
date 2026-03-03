@@ -1,65 +1,97 @@
 import * as THREE from "three";
-import { CSS2DObject } from "three/examples/jsm/Addons.js";
+import { Text } from "troika-three-text";
 
 export class Portrait extends THREE.Mesh {
-  css2dObjects: any[] = [];
-  constructor(name = "test", surname = "", age = null, gender = "") {
-    const geometry = new THREE.PlaneGeometry(3, 3);
+  textName!: Text;
+  textSurname!: Text;
+  textAge!: Text;
+  textGender!: Text;
+
+  constructor(
+    name: string = "test",
+    surname: string = "",
+    age: number | string | null = null,
+    gender: string = "",
+  ) {
+    const shape = new THREE.Shape();
+    const smallShape = new THREE.Shape();
+    const smallShape1 = new THREE.Shape();
+    // const smallShape
+    const segments = 64;
+    const rayonX = 1.9;
+    const rayonY = 2.2;
+    shape.ellipse(0, 0, rayonX, rayonY, 0, Math.PI * 2, false, 0);
+    const geometry = new THREE.ShapeGeometry(shape, segments);
+    smallShape.ellipse(0, 0, rayonX, rayonY, 0, Math.PI * 2, false, 0);
+    const smallGeometry = new THREE.ShapeGeometry(smallShape, segments);
+    smallShape1.ellipse(0, 0, rayonX, rayonY, 0, Math.PI * 2, false, 0);
+    const smallGeometry1 = new THREE.ShapeGeometry(smallShape1, segments);
+    const smallGeometry2 = new THREE.ShapeGeometry(smallShape1, segments);
     const material = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
+      color: 0xdddddd,
       side: THREE.DoubleSide,
-      depthTest: false,
       transparent: true,
     });
 
-    // material.opacity = 0;
+    const materialSmall = new THREE.MeshBasicMaterial({
+      color: 0xdddddd,
+      side: THREE.DoubleSide,
+      transparent: true,
+    });
+
+    const baseMaterial = new THREE.MeshBasicMaterial({
+      color: 0xcccccc,
+      side: THREE.DoubleSide,
+      transparent: true,
+    });
+
+    const smallCircle = new THREE.Mesh(smallGeometry, materialSmall);
+    smallCircle.position.set(0, 0, 0.1);
+    smallCircle.scale.set(0.98, 0.98, 0.98);
+
+    const smallCircle1 = new THREE.Mesh(smallGeometry1, material);
+    smallCircle1.position.set(0, 0, 0.2);
+    smallCircle1.scale.set(0.92, 0.92, 0.92);
+
+    const base = new THREE.Mesh(geometry, baseMaterial);
+    base.position.set(0, 0, 0.3);
+    base.scale.set(0.75, 0.75, 0.75);
 
     super(geometry, material);
+    this.add(smallCircle);
+    this.add(smallCircle1);
+    this.add(base);
 
-    this.css2dObjects = [];
-
-    const portraitInfos = document.createElement("div");
-    portraitInfos.style.position = "absolute";
-    portraitInfos.style.display = "flex";
-    portraitInfos.style.flexDirection = "column";
-    portraitInfos.style.alignItems = "center";
-    portraitInfos.style.width = "fit-content";
-    portraitInfos.style.pointerEvents = "all"; // Allow interaction if needed
-    this.css2dObjects.push(portraitInfos);
-
-    const portraitContainer = document.createElement("div");
-    portraitContainer.style.position = "absolute";
-    portraitContainer.style.display = "flex";
-    portraitContainer.style.flexDirection = "column";
-    portraitContainer.style.width = "fit-content";
-    portraitContainer.style.transform = "translateX(-100%)";
-    this.css2dObjects.push(portraitContainer);
-
-    const portraitName = document.createElement("div");
-    if (name !== "" || surname !== "")
-      portraitName.textContent = `${name} ${surname}`;
-    portraitContainer.appendChild(portraitName);
-    this.css2dObjects.push(portraitName);
-
-    const portraitAge = document.createElement("div");
-    if (age !== null) portraitAge.textContent = `${age}`;
-    portraitContainer.appendChild(portraitAge);
-    this.css2dObjects.push(portraitAge);
-
-    const portraitGender = document.createElement("div");
-    if (gender !== "") portraitGender.textContent = `${gender}`;
-    portraitContainer.appendChild(portraitGender);
-    this.css2dObjects.push(portraitGender);
-
-    portraitInfos.appendChild(portraitContainer);
-
-    const css2DObject = new CSS2DObject(portraitInfos);
-
-    css2DObject.position.set(1, 1, 1);
-
-    this.add(css2DObject);
+    this.textName = this.createText(`${name} ${surname}`, 0.8, "#000000", 0.8);
+    this.textAge = this.createText(
+      age !== null && age !== undefined ? age.toString() : "",
+      0.25,
+      "#000000",
+      0.0,
+    );
+    // this.textGender = this.createText(gender, 0.25, "#666666", -0.3);
 
     this.init();
+  }
+
+  private createText(
+    content: string,
+    fontSize: number,
+    color: string,
+    y: number,
+  ): Text {
+    const text = new Text();
+    this.add(text);
+    text.text = content;
+    text.fontSize = fontSize;
+    text.color = new THREE.Color(color);
+    text.position.set(0, y, 1);
+    text.font = "/fonts/Aktura-Regular.ttf";
+    text.anchorX = "center";
+    text.material.transparent = true;
+    text.renderOrder = 1;
+    text.sync();
+    return text;
   }
 
   init() {}
@@ -77,11 +109,15 @@ export class Portrait extends THREE.Mesh {
       this.material.forEach((m) => m.dispose());
     }
 
-    this.children.forEach((child) => {
-      if (child instanceof CSS2DObject) {
-        child.element.remove();
-      }
-    });
+    this.remove(this.textName);
+    this.remove(this.textSurname);
+    this.remove(this.textAge);
+    this.remove(this.textGender);
+
+    this.textName.dispose();
+    this.textSurname.dispose();
+    this.textAge.dispose();
+    this.textGender.dispose();
 
     this.parent?.remove(this);
   }
