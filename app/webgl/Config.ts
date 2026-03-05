@@ -6,28 +6,20 @@ export interface AppConfig {
   tree: TreeOptions;
 }
 
-const allPersons = async () => {
-  const res = await fetch("/api/persons");
-  const data = await res.json();
-  return data;
-};
-
-const persons = await allPersons();
-
 // Helpers pour faire correspondre le chemin de l'arbre à la base de données
-const getChildren = (parentId: string | null) =>
+export const getChildren = (persons: any[], parentId: string | null) =>
   persons
     .filter((p: any) => p.parent1Id === parentId)
     .sort((a: any, b: any) => a._id.localeCompare(b._id));
 
-const getPersonByPath = (path: number[]) => {
-  const roots = getChildren(null);
+export const getPersonByPath = (persons: any[], path: number[]) => {
+  const roots = getChildren(persons, null);
   if (roots.length === 0) return null;
 
   let currentPerson = roots[0];
   for (const step of path) {
     if (step === -1) continue;
-    const childrenList = getChildren(currentPerson._id);
+    const childrenList = getChildren(persons, currentPerson._id);
     if (step < childrenList.length) {
       currentPerson = childrenList[step];
     } else {
@@ -37,21 +29,24 @@ const getPersonByPath = (path: number[]) => {
   return currentPerson;
 };
 
-const getMaxDepth = (personId: string | null, depth: number): number => {
-  const childrenList = getChildren(personId);
+export const getMaxDepth = (
+  persons: any[],
+  personId: string | null,
+  depth: number,
+): number => {
+  const childrenList = getChildren(persons, personId);
   if (childrenList.length === 0) return depth - 1;
   return Math.max(
-    ...childrenList.map((child: any) => getMaxDepth(child._id, depth + 1)),
+    ...childrenList.map((child: any) =>
+      getMaxDepth(persons, child._id, depth + 1),
+    ),
   );
 };
 
-const maxDepth = getMaxDepth(null, 0);
+export const getTreeConfig = (persons: any[]): TreeOptions => {
+  const maxDepth = getMaxDepth(persons, null, 0);
 
-const config: AppConfig = {
-  width: 1200,
-  height: 600,
-
-  tree: {
+  return {
     seed: 1388377,
     branch: {
       levels: Math.max(1, maxDepth),
@@ -81,10 +76,10 @@ const config: AppConfig = {
         // On évite de rajouter des enfants sur ces prolongements pour ne pas les dupliquer.
         if (path.length > 0 && path[path.length - 1] === -1) return 0;
 
-        const person = getPersonByPath(path);
+        const person = getPersonByPath(persons, path);
         if (!person) return 0;
 
-        const childrenList = getChildren(person._id);
+        const childrenList = getChildren(persons, person._id);
         return childrenList.length;
       },
 
@@ -113,12 +108,13 @@ const config: AppConfig = {
         5: 0.7,
       },
       getMetadata: (path: number[]) => {
-        const person = getPersonByPath(path);
+        const person = getPersonByPath(persons, path);
         if (!person) return null;
         return {
           name: person.name,
           surname: person.surname,
           gender: person.gender,
+          image: person.mediaUrl,
         };
       },
 
@@ -135,7 +131,13 @@ const config: AppConfig = {
     leaves: {
       count: 0,
     },
-  },
+  };
+};
+
+const config: AppConfig = {
+  width: 1200,
+  height: 600,
+  tree: getTreeConfig([]), // Default empty config
 };
 
 export default config;

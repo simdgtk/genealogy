@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { OBB } from "three/examples/jsm/math/OBB";
 import RNG from "./rng";
 import { Branch } from "./branch";
 import { Billboard, TreeType } from "./enums";
@@ -32,23 +31,24 @@ export class Tree extends THREE.Group {
   getGradientTexture() {
     // 3 tones: Shadow, Midtone, Highlight
     const colors = new Uint8Array([
-      64,
-      64,
-      64,
-      255, // Dark
-      128,
-      128,
-      128,
-      255, // Mid
-      255,
-      255,
-      255,
-      255, // Light
+      // Dark tonal stop
+      57, 33, 9, 255,
+      // Mid tonal stop
+      173, 134, 103, 255,
+      // Light tonal stop
+      213, 188, 152, 255,
     ]);
 
+    // DataTexture params: data, width (3 colors), height (1 row), format
     const gradientMap = new THREE.DataTexture(colors, 3, 1, THREE.RGBAFormat);
+
+    // NearestFilter is crucial for toon scaling
     gradientMap.minFilter = THREE.NearestFilter;
     gradientMap.magFilter = THREE.NearestFilter;
+
+    gradientMap.colorSpace = THREE.SRGBColorSpace;
+    gradientMap.generateMipmaps = false;
+
     gradientMap.needsUpdate = true;
     return gradientMap;
   }
@@ -58,7 +58,6 @@ export class Tree extends THREE.Group {
    */
   constructor(options = new TreeOptions()) {
     super();
-    // this.portrait = new Portrait();
     this.name = "Tree";
     this.branchesMesh = new THREE.Mesh();
     this.leavesMesh = new THREE.Mesh();
@@ -133,7 +132,6 @@ export class Tree extends THREE.Group {
     this.createBranchesGeometry();
     this.createLeavesGeometry();
     this.createTrellis();
-    this.createBoxModels();
   }
 
   /**
@@ -151,7 +149,6 @@ export class Tree extends THREE.Group {
     // créer un cube à l'origine de la branche
     // const portrait = new Portrait();
 
-    // portrait.userData.obb = new OBB();
     let color = 0xffffff;
     switch (branch.level) {
       case 0:
@@ -173,10 +170,6 @@ export class Tree extends THREE.Group {
         color = 0x00ffff;
         break;
     }
-    // portrait.material.color.setHex(color);
-    // portrait.position.copy(sectionOrigin);
-    // this.add(portrait);
-    // this.portraits.push(portrait);
 
     let sectionLength =
       branch.length /
@@ -317,8 +310,8 @@ export class Tree extends THREE.Group {
       const portrait = new Portrait(
         metadata.name,
         metadata.surname,
-        null,
-        metadata.gender,
+        metadata.age,
+        metadata.image,
       );
 
       const positionOrigin =
@@ -694,10 +687,34 @@ export class Tree extends THREE.Group {
 
     const mat = new THREE.MeshToonMaterial({
       name: "branches",
-      color: new THREE.Color(this.options.bark.tint),
+      color: new THREE.Color(0xffffff), // White color so gradientMap shows its original colors
       gradientMap: this.getGradientTexture(), // Use generated gradient map
-      depthTest: false,
     });
+
+    mat.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <gradientmap_pars_fragment>",
+        `
+#ifdef USE_GRADIENTMAP
+  uniform sampler2D gradientMap;
+#endif
+
+vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {
+  // dotNL will be from -1.0 to 1.0
+  float dotNL = dot( normal, lightDirection );
+  vec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );
+
+  #ifdef USE_GRADIENTMAP
+    // Use .rgb instead of .r to support colored gradient maps
+    return texture2D( gradientMap, coord ).rgb;
+  #else
+    vec2 fw = fwidth( coord ) * 0.5;
+    return mix( vec3( 0.7 ), vec3( 1.0 ), smoothstep( 0.7 - fw.x, 0.7 + fw.x, coord.x ) );
+  #endif
+}
+        `,
+      );
+    };
 
     if (this.options.bark.textured) {
       // mat.map = getBarkTexture(
@@ -739,13 +756,18 @@ export class Tree extends THREE.Group {
     g.computeVertexNormals();
     g.computeBoundingSphere();
 
+    // const mat = new THREE.MeshToonMaterial({
+    //   name: "leaves",
+    //   map: getLeafTexture(this.options.leaves.type), // Re-enable texture map
+    //   // color: new THREE.Color(this.options.leaves.tint),
+    //   side: THREE.DoubleSide,
+    //   alphaTest: this.options.leaves.alphaTest,
+    //   // gradientMap: this.getGradientTexture(), // Use generated gradient map
+    // });
+
     const mat = new THREE.MeshToonMaterial({
       name: "leaves",
-      map: getLeafTexture(this.options.leaves.type), // Re-enable texture map
-      color: new THREE.Color(this.options.leaves.tint),
-      side: THREE.DoubleSide,
-      alphaTest: this.options.leaves.alphaTest,
-      gradientMap: this.getGradientTexture(), // Use generated gradient map
+      color: new THREE.Color(0x00ff00),
     });
 
     this.leavesMesh.geometry.dispose();
@@ -882,52 +904,7 @@ export class Tree extends THREE.Group {
     }
   }
 
-  // créer les OBB pour les portraits
-  createBoxModels() {
-    this.portraits.forEach((portrait) => {
-      portrait.geometry.computeBoundingBox();
-      portrait.userData.obb = new OBB().fromBox3(portrait.geometry.boundingBox);
-      // console.log(portrait.userData.obb);
-    });
-  }
-
-  // classes ajoutées
-  animate(portraits = this.portraits) {
-    portraits.forEach((portrait) => {
-      // // portrait.material.color.set(0x00ff00);
-      // portrait.updateMatrixWorld(true);
-      // const smallerBox = portrait.geometry.boundingBox.clone();
-      // // scale box down by 50% for collision checks
-      // smallerBox.min.multiplyScalar(0.5);
-      // smallerBox.max.multiplyScalar(0.5);
-      // portrait.userData.obb.fromBox3(smallerBox);
-      // portrait.userData.obb.applyMatrix4(portrait.matrixWorld);
-    });
-
-    // portraits.forEach((portrait) => {
-    //   portraits.forEach((otherPortrait) => {
-    //     if (
-    //       portrait !== otherPortrait &&
-    //       portrait.userData.obb.intersectsOBB(otherPortrait.userData.obb)
-    //     ) {
-    //       portrait.material.color.set(0xff0000);
-    //       if (typeof window !== "undefined" && !window.__debugOBB) {
-    //         window.__debugOBB = true;
-    //         fetch("/api/log", {
-    //           method: "POST",
-    //           body: JSON.stringify({
-    //             p1_center: portrait.userData.obb.center,
-    //             p2_center: otherPortrait.userData.obb.center,
-    //             p1_half: portrait.userData.obb.halfSize,
-    //             p2_half: otherPortrait.userData.obb.halfSize,
-    //             p1_pos: portrait.position,
-    //             p2_pos: otherPortrait.position,
-    //           }),
-    //           headers: { "Content-Type": "application/json" },
-    //         }).catch(() => {});
-    //       }
-    //     }
-    //   });
-    // });
+  animate() {
+    this.rotation.y += 0.0002;
   }
 }

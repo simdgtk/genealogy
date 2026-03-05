@@ -1,12 +1,9 @@
 import * as THREE from "three";
 import { Tree as TreeLib } from "~/webgl/lib/ez-tree";
-import Config from "~/webgl/Config";
-// import PaneManager from "~/webgl/PaneManager";
-
+import Config, { getTreeConfig } from "~/webgl/Config";
 export default class Tree {
   scene: THREE.Scene;
   instance!: TreeLib;
-  // paneManager!: PaneManager;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -19,22 +16,48 @@ export default class Tree {
     tree.options.copy(Config.tree as any);
     tree.generate();
     this.instance = tree;
-    // this.paneManager = new PaneManager(this.instance);
 
-    tree.scale.set(0.2, 0.2, 0.2);
-    tree.position.set(0, -4.8, 0);
-    tree.rotation.y = Math.PI / 2;
+    this.instance.scale.set(0.2, 0.2, 0.2);
+    this.instance.position.set(0, -4.8, 0);
+    this.instance.rotation.y = Math.PI / 2;
 
-    this.scene.add(tree);
-    // this.paneManager.initPane();
+    this.scene.add(this.instance);
+  }
 
-    this.instance.createBoxModels();
+  setPersons(persons: any[]) {
+    if (this.instance) {
+      this.scene.remove(this.instance);
+      this.instance.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          if (!child.userData.isCachedModel) {
+            if (child.geometry) child.geometry.dispose();
+            if (Array.isArray(child.material)) {
+              child.material.forEach((m) => m.dispose());
+            } else {
+              child.material.dispose();
+            }
+          }
+        }
+      });
+    }
+
+    const newConfig = getTreeConfig(persons);
+    const tree = new TreeLib();
+    tree.options.copy(newConfig as any);
+    tree.generate();
+    this.instance = tree;
+
+    this.instance.scale.set(0.3, 0.3, 0.3);
+    this.instance.position.set(0, -4.8, 0);
+    this.instance.rotation.y = Math.PI / 2;
+
+    this.scene.add(this.instance);
   }
 
   update(delta: number, rotation: THREE.Quaternion) {
     if (this.instance) {
-      this.instance.updatePortraits(rotation);
       this.instance.animate();
+      this.instance.updatePortraits(rotation);
     }
   }
 }

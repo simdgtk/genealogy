@@ -35,11 +35,15 @@ const handleLogout = async () => {
 
                 <div class="auth-grid">
                     <div class="family-list" v-if="families && families.length > 0">
-                        <NuxtLink v-for="family in families" :key="family._id" :to="`/famille?familyId=${family._id}`"
-                            class="family-item">
-                            <span class="family-name">{{ family.name }}</span>
-                            <span class="family-arrow">→</span>
-                        </NuxtLink>
+                        <div v-for="family in families" :key="family._id" class="family-item">
+                            <div class="family-info">
+                                <span class="family-name">{{ family.name }}</span>
+                            </div>
+                            <div class="family-actions">
+                                <NuxtLink :to="`/tree/${family._id}`" class="action-btn view-btn">Voir l'arbre</NuxtLink>
+                                <NuxtLink :to="`/famille/${family._id}`" class="action-btn edit-btn">Gérer</NuxtLink>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="empty-state" v-else>
@@ -172,8 +176,36 @@ const handleLogout = async () => {
     font-size: 18px;
 }
 
-.family-arrow {
-    font-size: 20px;
+.family-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.action-btn {
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid #000;
+    transition: all 0.2s;
+}
+
+.view-btn {
+    background: #000;
+    color: #fff;
+}
+
+.view-btn:hover {
+    background: #333;
+}
+
+.edit-btn {
+    background: #fff;
+    color: #000;
+}
+
+.edit-btn:hover {
+    background: #f0f0f0;
 }
 
 .empty-state {

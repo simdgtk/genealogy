@@ -2,18 +2,14 @@ import * as THREE from "three";
 import Tree from "./components/Tree";
 import Border from "./components/Border";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
-import { Portrait } from "./lib/ez-tree/portrait";
 
 export default class SceneManager {
   canvas: HTMLCanvasElement;
   scene!: THREE.Scene;
   camera!: THREE.OrthographicCamera;
   renderer!: THREE.WebGLRenderer;
-  cssRenderer!: CSS2DRenderer;
   timer: THREE.Timer;
   tree!: Tree;
-  portrait!: Portrait;
   border!: Border;
   controls!: OrbitControls;
 
@@ -33,6 +29,19 @@ export default class SceneManager {
 
   initScene() {
     this.scene = new THREE.Scene();
+
+    const cubeTextureLoader = new THREE.CubeTextureLoader();
+
+    const environmentMap = cubeTextureLoader.load([
+      "/environment_maps/px.png",
+      "/environment_maps/px.png",
+      "/environment_maps/px.png",
+      "/environment_maps/px.png",
+      "/environment_maps/px.png",
+      "/environment_maps/px.png",
+    ]);
+    this.scene.environment = environmentMap;
+    this.scene.background = new THREE.Color(0x3f5f5e);
   }
 
   initCamera() {
@@ -67,18 +76,6 @@ export default class SceneManager {
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    this.cssRenderer = new CSS2DRenderer();
-    this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
-    this.cssRenderer.domElement.style.position = "absolute";
-    this.cssRenderer.domElement.style.top = "0px";
-    this.cssRenderer.domElement.style.pointerEvents = "none";
-
-    if (this.canvas.parentElement) {
-      this.canvas.parentElement.appendChild(this.cssRenderer.domElement);
-    } else {
-      document.body.appendChild(this.cssRenderer.domElement);
-    }
   }
 
   initControls() {
@@ -93,9 +90,7 @@ export default class SceneManager {
 
   initComponents() {
     this.tree = new Tree(this.scene);
-    // this.portrait = new Portrait();
-    // this.scene.add(this.portrait);
-    this.border = new Border(this.camera, -1); // car caméra orthographique, frustumSize / 2
+    this.border = new Border(this.camera, -1, "Dupont"); // car caméra orthographique, frustumSize / 2
   }
 
   addEventListeners() {
@@ -114,7 +109,6 @@ export default class SceneManager {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.cssRenderer.setSize(window.innerWidth, window.innerHeight);
 
     if (this.border) {
       this.border.resize();
@@ -124,22 +118,32 @@ export default class SceneManager {
   animate() {
     const delta = this.timer.getDelta();
 
-    this.renderer.render(this.scene, this.camera);
-    this.cssRenderer.render(this.scene, this.camera);
     if (this.controls) this.controls.update();
 
     if (this.tree) this.tree.update(delta, this.camera.quaternion);
-    if (this.portrait) this.portrait.animate(this.camera.quaternion);
+    if (this.border) this.border.animate();
+
+    this.renderer.render(this.scene, this.camera);
+
     if (this.animate) requestAnimationFrame(this.animate.bind(this));
+  }
+
+  updatePersons(persons: any[]) {
+    if (this.tree) {
+      this.tree.setPersons(persons);
+    }
+
+    if (this.border && persons && persons.length > 0) {
+      const ancestor = persons.find((p) => !p.parent1Id);
+      if (ancestor) {
+        const nomFamille = ancestor.surname || ancestor.name || "";
+        this.border.updateFamilyName(nomFamille);
+      }
+    }
   }
 
   destroy() {
     window.removeEventListener("resize", this.onResize.bind(this));
     this.renderer.dispose();
-    if (this.cssRenderer.domElement.parentElement) {
-      this.cssRenderer.domElement.parentElement.removeChild(
-        this.cssRenderer.domElement,
-      );
-    }
   }
 }

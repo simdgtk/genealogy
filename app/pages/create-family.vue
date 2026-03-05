@@ -13,7 +13,7 @@ const handleCreateFamily = async () => {
         });
 
         if (res) {
-            navigateTo(`/famille?familyId=${res._id}`);
+            navigateTo(`/famille/${res._id}`);
         }
     } catch (error: any) {
         alert(error.statusMessage || "Erreur lors de la création de la famille");
@@ -33,7 +33,7 @@ const handleCreateFamily = async () => {
                     </path>
                 </svg></div>
             <nav class="genealogy-nav">
-                <NuxtLink to="/famille" class="nav-btn">Retour</NuxtLink>
+                <NuxtLink to="/dashboard" class="nav-btn">Retour</NuxtLink>
             </nav>
         </header>
 

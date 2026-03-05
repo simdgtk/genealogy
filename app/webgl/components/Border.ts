@@ -15,11 +15,20 @@ export default class Border {
   smallGeometry!: THREE.PlaneGeometry;
   material!: THREE.MeshBasicMaterial;
   smallMaterial!: THREE.MeshBasicMaterial;
+  smallMaterial2!: THREE.MeshBasicMaterial;
+  patternTexture!: THREE.Texture;
+  patternTexture2!: THREE.Texture;
   zOffset: number;
+  familyName: string;
 
-  constructor(camera: THREE.OrthographicCamera, zOffset: number = -5) {
+  constructor(
+    camera: THREE.OrthographicCamera,
+    zOffset: number = -5,
+    familyName: string,
+  ) {
     this.camera = camera;
     this.zOffset = zOffset;
+    this.familyName = familyName;
     this.init();
   }
 
@@ -43,14 +52,25 @@ export default class Border {
 
     // repeating texture
     const textureLoader = new THREE.TextureLoader();
-    const patternTexture = textureLoader.load("/webgl/pattern.svg");
-    patternTexture.wrapS = THREE.RepeatWrapping;
-    patternTexture.wrapT = THREE.RepeatWrapping;
-    patternTexture.colorSpace = THREE.SRGBColorSpace;
-    patternTexture.repeat.set(1, 1);
+    this.patternTexture = textureLoader.load("/webgl/pattern.svg");
+    this.patternTexture.wrapS = THREE.RepeatWrapping;
+    this.patternTexture.wrapT = THREE.RepeatWrapping;
+    this.patternTexture.colorSpace = THREE.SRGBColorSpace;
+    this.patternTexture.repeat.set(1, 1);
+    this.patternTexture2 = textureLoader.load("/webgl/pattern.svg");
+    this.patternTexture2.wrapS = THREE.RepeatWrapping;
+    this.patternTexture2.wrapT = THREE.RepeatWrapping;
+    this.patternTexture2.colorSpace = THREE.SRGBColorSpace;
+    this.patternTexture2.repeat.set(1, 1);
     // patternTexture.offset.set(0.5, 0);
     this.smallMaterial = new THREE.MeshBasicMaterial({
-      map: patternTexture,
+      map: this.patternTexture,
+      side: THREE.DoubleSide,
+      depthTest: false,
+      transparent: true,
+    });
+    this.smallMaterial2 = new THREE.MeshBasicMaterial({
+      map: this.patternTexture2,
       side: THREE.DoubleSide,
       depthTest: false,
       transparent: true,
@@ -70,7 +90,7 @@ export default class Border {
     // small borders
     this.smallMeshTopTop = new THREE.Mesh(
       this.smallGeometry,
-      this.smallMaterial,
+      this.smallMaterial2,
     );
     this.smallMeshTopTop.position.z = this.zOffset;
     this.smallMeshTopTop.renderOrder = 1001;
@@ -94,14 +114,14 @@ export default class Border {
 
     this.smallMeshBottomBottom = new THREE.Mesh(
       this.smallGeometry,
-      this.smallMaterial,
+      this.smallMaterial2,
     );
     this.smallMeshBottomBottom.position.z = this.zOffset;
     this.smallMeshBottomBottom.renderOrder = 1001;
     this.camera.add(this.smallMeshBottomBottom);
 
     this.textTop = new Text();
-    this.textTop.text = "La famille Daguet";
+    this.textTop.text = `La famille ${this.familyName}`;
     this.textTop.fontSize = 0.5;
     this.textTop.color = new THREE.Color(0x7c2d12);
     this.textTop.font = "/fonts/Aktura-Regular.ttf";
@@ -155,24 +175,36 @@ export default class Border {
       cameraBottom + actualHeight - smallHeight / 2;
     this.smallMeshBottomBottom.position.y = cameraBottom + smallHeight / 2;
 
-    if (this.smallMaterial.map) {
-      const texture = this.smallMaterial.map;
+    const imageWidth = 1050;
+    const imageHeight = 612;
+    const imageAspect = imageWidth / imageHeight;
 
-      const imageWidth = 1050;
-      const imageHeight = 612;
-      const imageAspect = imageWidth / imageHeight;
+    const meshRealWidth = 2 * scaleX;
+    const meshRealHeight = 0.2;
+    const meshAspect = meshRealWidth / meshRealHeight;
+    const repeatX = meshAspect / imageAspect;
 
-      const meshRealWidth = 2 * scaleX;
-      const meshRealHeight = 0.2;
-      const meshAspect = meshRealWidth / meshRealHeight;
+    if (this.patternTexture) {
+      this.patternTexture.repeat.set(repeatX, 1);
+      this.patternTexture.wrapT = THREE.ClampToEdgeWrapping;
+    }
 
-      texture.repeat.set(meshAspect / imageAspect, 1);
-
-      texture.wrapT = THREE.ClampToEdgeWrapping;
+    if (this.patternTexture2) {
+      this.patternTexture2.repeat.set(repeatX, 1);
+      this.patternTexture2.wrapT = THREE.ClampToEdgeWrapping;
     }
   }
 
   animate() {
-    
+    this.patternTexture.offset.x += 0.001;
+    this.patternTexture2.offset.x -= 0.001;
+  }
+
+  updateFamilyName(familyName: string) {
+    this.familyName = familyName;
+    if (this.textTop) {
+      this.textTop.text = `La famille ${this.familyName}`;
+      this.textTop.sync();
+    }
   }
 }

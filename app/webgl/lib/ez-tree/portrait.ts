@@ -1,70 +1,115 @@
 import * as THREE from "three";
 import { Text } from "troika-three-text";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
-export class Portrait extends THREE.Mesh {
+let cachedModel: THREE.Group | null = null;
+let loadPromise: Promise<THREE.Group> | null = null;
+
+function loadFrameModel(): Promise<THREE.Group> {
+  if (cachedModel) return Promise.resolve(cachedModel);
+  if (loadPromise) return loadPromise;
+
+  loadPromise = new Promise((resolve, reject) => {
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath("/draco/");
+    loader.setDRACOLoader(dracoLoader);
+
+    loader.load(
+      "/webgl/frame.glb",
+      (gltf) => {
+        cachedModel = gltf.scene;
+
+        const box = new THREE.Box3().setFromObject(cachedModel);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (maxDim > 0.001) {
+          const scale = 4.4 / maxDim;
+          cachedModel.scale.setScalar(scale);
+          cachedModel.rotation.x = Math.PI / 2;
+        }
+
+        box.setFromObject(cachedModel);
+        const center = box.getCenter(new THREE.Vector3());
+        cachedModel.position.sub(center);
+
+        cachedModel.traverse((child) => {
+          if (child.name === "Plane056_1") {
+            child.position.y += 0.005;
+            // child.rotation.y = Math.PI;
+            // child.position.z = -maxDim / 2;
+          }
+          if (child instanceof THREE.Mesh) {
+            child.userData.isCachedModel = true;
+            if (child.material) {
+              child.material.depthTest = false;
+              child.material.transparent = true;
+              child.material.side = THREE.DoubleSide;
+            }
+          }
+        });
+        resolve(cachedModel);
+      },
+      undefined,
+      reject,
+    );
+  });
+
+  return loadPromise;
+}
+
+export class Portrait extends THREE.Group {
   textName!: Text;
   textSurname!: Text;
   textAge!: Text;
   textGender!: Text;
+  modelInstance?: THREE.Group;
 
   constructor(
     name: string = "test",
     surname: string = "",
     age: number | string | null = null,
-    gender: string = "",
+    image: string | null = null,
   ) {
-    const shape = new THREE.Shape();
-    const smallShape = new THREE.Shape();
-    const smallShape1 = new THREE.Shape();
-    // const smallShape
-    const segments = 64;
-    const rayonX = 1.9;
-    const rayonY = 2.2;
-    shape.ellipse(0, 0, rayonX, rayonY, 0, Math.PI * 2, false, 0);
-    const geometry = new THREE.ShapeGeometry(shape, segments);
-    smallShape.ellipse(0, 0, rayonX, rayonY, 0, Math.PI * 2, false, 0);
-    const smallGeometry = new THREE.ShapeGeometry(smallShape, segments);
-    smallShape1.ellipse(0, 0, rayonX, rayonY, 0, Math.PI * 2, false, 0);
-    const smallGeometry1 = new THREE.ShapeGeometry(smallShape1, segments);
-    const smallGeometry2 = new THREE.ShapeGeometry(smallShape1, segments);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0xdddddd,
-      side: THREE.DoubleSide,
-      transparent: true,
+    super();
+
+    loadFrameModel().then((model) => {
+      this.modelInstance = model.clone();
+
+      if (image) {
+        new THREE.TextureLoader().load(`${image}`, (texture) => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+          texture.repeat.set(1, 1);
+          texture.flipY = false;
+
+          this.modelInstance?.traverse((child) => {
+            if (child.name === "Plane056_1" && child instanceof THREE.Mesh) {
+              child.material = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                depthTest: false,
+                side: THREE.DoubleSide,
+              });
+            }
+          });
+        });
+      }
+
+      this.add(this.modelInstance);
     });
 
-    const materialSmall = new THREE.MeshBasicMaterial({
-      color: 0xdddddd,
-      side: THREE.DoubleSide,
-      transparent: true,
-    });
-
-    const baseMaterial = new THREE.MeshBasicMaterial({
-      color: 0xcccccc,
-      side: THREE.DoubleSide,
-      transparent: true,
-    });
-
-    const smallCircle = new THREE.Mesh(smallGeometry, materialSmall);
-    smallCircle.position.set(0, 0, 0.1);
-    smallCircle.scale.set(0.98, 0.98, 0.98);
-
-    const smallCircle1 = new THREE.Mesh(smallGeometry1, material);
-    smallCircle1.position.set(0, 0, 0.2);
-    smallCircle1.scale.set(0.92, 0.92, 0.92);
-
-    const base = new THREE.Mesh(geometry, baseMaterial);
-    base.position.set(0, 0, 0.3);
-    base.scale.set(0.75, 0.75, 0.75);
-
-    super(geometry, material);
-    this.add(smallCircle);
-    this.add(smallCircle1);
-    this.add(base);
-
-    this.textName = this.createText(`${name} ${surname}`, 0.8, "#000000", 0.8);
+    const textNameStr = `${name || ""} ${surname || ""}`.trim();
+    this.textName = this.createText(
+      textNameStr !== "" ? textNameStr : " ",
+      0.55,
+      "#000000",
+      -0.65,
+    );
     this.textAge = this.createText(
-      age !== null && age !== undefined ? age.toString() : "",
+      age !== null && age !== undefined && age.toString().trim() !== ""
+        ? age.toString()
+        : " ",
       0.25,
       "#000000",
       0.0,
@@ -85,11 +130,12 @@ export class Portrait extends THREE.Mesh {
     text.text = content;
     text.fontSize = fontSize;
     text.color = new THREE.Color(color);
-    text.position.set(0, y, 1);
+    text.position.set(0, y, 5);
     text.font = "/fonts/Aktura-Regular.ttf";
     text.anchorX = "center";
-    text.material.transparent = true;
-    text.renderOrder = 1;
+    // text.material.transparent = true;
+    // text.material.depthTest = false;
+    // text.renderOrder = 1;
     text.sync();
     return text;
   }
@@ -102,22 +148,40 @@ export class Portrait extends THREE.Mesh {
   }
 
   dispose() {
-    this.geometry.dispose();
-    if (this.material instanceof THREE.Material) {
-      this.material.dispose();
-    } else if (Array.isArray(this.material)) {
-      this.material.forEach((m) => m.dispose());
+    if (this.modelInstance) {
+      this.modelInstance.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          if (!child.userData.isCachedModel) {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((m) => m.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+          }
+        }
+      });
+      this.remove(this.modelInstance);
     }
 
-    this.remove(this.textName);
-    this.remove(this.textSurname);
-    this.remove(this.textAge);
-    this.remove(this.textGender);
-
-    this.textName.dispose();
-    this.textSurname.dispose();
-    this.textAge.dispose();
-    this.textGender.dispose();
+    if (this.textName) {
+      this.remove(this.textName);
+      this.textName.dispose();
+    }
+    if (this.textSurname) {
+      this.remove(this.textSurname);
+      this.textSurname.dispose();
+    }
+    if (this.textAge) {
+      this.remove(this.textAge);
+      this.textAge.dispose();
+    }
+    if (this.textGender) {
+      this.remove(this.textGender);
+      this.textGender.dispose();
+    }
 
     this.parent?.remove(this);
   }
