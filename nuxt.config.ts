@@ -2,6 +2,16 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
+  css: ["~/styles/main.scss"],
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: `@use "${process.cwd()}/app/styles/utils" as *;\n@use "${process.cwd()}/app/styles/variables" as *;\n`,
+        },
+      },
+    },
+  },
   modules: ["@nuxt/eslint", "nuxt-mongoose"],
   typescript: {
     tsConfig: {

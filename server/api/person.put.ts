@@ -41,14 +41,30 @@ export default defineEventHandler(async (event) => {
 
         try {
           execSync(
-            `magick - -resize "700x700>" -quality 80 webp:"${finalPath}"`,
-            { input: field.data },
+            `/opt/homebrew/bin/magick - -resize "700x700>" -quality 80 webp:"${finalPath}"`,
+            {
+              input: field.data,
+              env: {
+                ...process.env,
+                PATH: `/opt/homebrew/bin:${process.env.PATH}`,
+              },
+            },
           );
           mediaUrl = `/uploads/${finalFilename}`;
         } catch (magickError) {
           console.error("Erreur ImageMagick :", magickError);
-          // If magick fails, we might want to still continue without the image or throw
-          throw new Error("Erreur lors du traitement de l'image");
+          try {
+            fs.writeFileSync(
+              finalPath.replace(
+                ".webp",
+                `.${field.filename?.split(".").pop() || "jpg"}`,
+              ),
+              field.data,
+            );
+            mediaUrl = `/uploads/${finalFilename.replace(".webp", `.${field.filename?.split(".").pop() || "jpg"}`)}`;
+          } catch (fallbackError) {
+            console.error("Fallback save failed:", fallbackError);
+          }
         }
       } else if (field.name === "id") {
         personId = field.data.toString("utf-8");

@@ -1,160 +1,134 @@
-<template class="section">
-  <div class="page-container">
-    <div class="header-actions">
-      <NuxtLink to="/dashboard" class="back-link">← Retour au tableau de bord</NuxtLink>
-      <h1>Gestion de la famille</h1>
+<template>
+    <div class="tree-page">
+        <div class="auth-bar">
+            <template v-if="isLoggedIn">
+                <button @click="handleDashboard" class="nav-btn">Tableau de bord</button>
+                <button @click="handleEditFamily" class="nav-btn highlight">Gérer cette famille</button>
+                <button @click="handleLogout" class="nav-btn">Se déconnecter</button>
+            </template>
+            <template v-else>
+                <button @click="handleLogin" class="nav-btn highlight">Se connecter</button>
+            </template>
+        </div>
+        <canvas ref="canvas" class="webgl-canvas"></canvas>
     </div>
-    
-    <span v-if="persons.length === 0">{{ texts.ancestor }}</span>
-
-    <div class="split-layout">
-      <section class="form-section">
-        <h2>{{ selectedPerson ? 'Modifier une personne' : 'Ajouter une personne' }}</h2>
-        <PersonForm :persons="persons" :person="selectedPerson" @submit="handleSavePerson"
-          @cancel="selectedPerson = null" />
-      </section>
-
-      <section class="list-section">
-        <h2>Personnes actuelles</h2>
-        <PersonList :persons="persons" @delete="handleDeletePerson" @edit="handleEditPerson" />
-      </section>
-    </div>
-  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRoute } from "vue-router";
-import PersonForm from "~/components/PersonForm.vue";
-import PersonList from "~/components/PersonList.vue";
-import type { Person } from "~/types/person";
+import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import type SceneManager from '~/webgl/SceneManager'
+import { authClient } from '~/lib/client'
 
-const route = useRoute();
-const familyId = route.params.id as string;
+const route = useRoute()
+const familyId = route.params.id as string
 
-if (!familyId) {
-  navigateTo("/dashboard");
+const session = authClient.useSession()
+const isLoggedIn = computed(() => !!session.value?.data)
+
+const canvas = ref<HTMLCanvasElement | null>(null)
+let sceneManager: SceneManager | null = null
+
+const handleLogin = () => {
+    navigateTo('/login')
 }
 
-const texts = {
-  ancestor: "Ajouter l'ancêtre",
-  deleteAncestor: "Supprimer l'ancêtre",
-  person: "Ajouter un enfant",
-  deletePerson: "Supprimer l'enfant",
-  relative: "Ajouter un proche",
-  deleteRelative: "Supprimer le proche"
-};
+const handleDashboard = () => {
+    navigateTo('/dashboard')
+}
 
-const persons = ref<Person[]>(await $fetch<Person[]>(`/api/persons?familyId=${familyId}`) || []);
+const handleEditFamily = () => {
+    navigateTo(`/tree/${familyId}`)
+}
 
-const selectedPerson = ref<Person | null>(null);
+const handleLogout = async () => {
+    await authClient.signOut()
+    window.location.href = '/'
+}
 
-const handleEditPerson = (person: Person) => {
-  selectedPerson.value = person;
-};
+const fetchPersons = async () => {
+    const res = await fetch(`/api/persons?familyId=${familyId}`)
+    const data = await res.json()
+    return data
+}
 
-const handleSavePerson = async (personData: any) => {
-  try {
-    const formData = new FormData();
-
-    if (personData.surname) formData.append("surname", personData.surname);
-    if (personData.name) formData.append("name", personData.name);
-    if (personData.birthDate) formData.append("birthDate", personData.birthDate);
-    if (personData.deathDate) formData.append("deathDate", personData.deathDate);
-    if (personData.gender) formData.append("gender", personData.gender);
-    if (personData.parent1Id) formData.append("parent1Id", String(personData.parent1Id));
-    formData.append("familyId", familyId);
-
-    if (personData.image) {
-      formData.append("image", personData.image);
+const updateTree = async () => {
+    if (sceneManager) {
+        const persons = await fetchPersons()
+        sceneManager.updatePersons(persons)
     }
+}
 
-    let result: Person;
-    if (selectedPerson.value?._id) {
-      formData.append("id", selectedPerson.value._id);
-      result = await $fetch<Person>("/api/person", {
-        method: "PUT",
-        body: formData,
-      });
-    } else {
-      result = await $fetch<Person>("/api/person", {
-        method: "POST",
-        body: formData,
-      });
+onMounted(async () => {
+    if (canvas.value) {
+        const SceneManagerModule = await import('~/webgl/SceneManager')
+        sceneManager = new SceneManagerModule.default(canvas.value)
+
+        await updateTree()
     }
+})
 
-    if (result) {
-      if (selectedPerson.value) {
-        const index = persons.value.findIndex(p => p._id === result._id);
-        if (index !== -1) {
-          persons.value[index] = result;
-        }
-      } else {
-        persons.value.push(result);
-      }
-    } else {
-      persons.value = await $fetch<Person[]>(`/api/persons?familyId=${familyId}`) || [];
+onBeforeUnmount(() => {
+    if (sceneManager) {
+        sceneManager.destroy()
     }
-
-    selectedPerson.value = null;
-  } catch (err) {
-    console.error("Error saving person:", err);
-  }
-};
-
-const handleDeletePerson = async (id: string) => {
-  try {
-    await $fetch(`/api/person`, {
-      method: "DELETE",
-      body: { id },
-    });
-    persons.value = persons.value.filter((person: Person) => person._id !== id);
-  } catch (err) {
-    console.error("Error deleting person:", err);
-  }
-};
+})
 </script>
 
-<style scoped>
-.page-container {
-  color: #000;
-  font-family: sans-serif;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+<style lang="scss" scoped>
+.tree-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    background-color: $color-bg;
 }
 
-.header-actions {
-  margin-bottom: 2rem;
+.auth-bar {
+    position: fixed;
+    bottom: toRem(24);
+    right: toRem(24);
+    z-index: 100;
+    display: flex;
+    gap: toRem(12);
+    height: fit-content;
 }
 
-.back-link {
-  display: inline-block;
-  margin-bottom: 1rem;
-  color: #666;
-  text-decoration: none;
-  font-size: 14px;
+.nav-btn {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    padding: toRem(10) toRem(20);
+    font-size: toRem(11);
+    font-family: $font-sans;
+    font-weight: 700;
+    cursor: pointer;
+    color: $color-text;
+    transition: all 0.2s ease;
+    height: fit-content;
 }
 
-.back-link:hover {
-  text-decoration: underline;
+.nav-btn:hover {
+    background: #f0f0f0;
 }
 
-.split-layout {
-  display: flex;
-  gap: 4rem;
-  margin-top: 2rem;
+.nav-btn.highlight {
+    background: $color-accent;
+    color: $color-surface;
+    border-color: $color-border;
 }
 
-.form-section {
-  flex: 1;
+.nav-btn.highlight:hover {
+    filter: brightness(1.1);
 }
 
-.list-section {
-  flex: 1;
-}
-
-h1 {
-  margin: 0;
+.webgl-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    outline: none;
 }
 </style>

@@ -117,7 +117,7 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
     </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .genealogy-auth {
     background-color: #E3E4DD;
     color: #000;
@@ -127,29 +127,30 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
 }
 
 .genealogy-header {
-    height: 64px;
+    height: toRem(64);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 40px;
+    padding: 0 toRem(40);
     border-bottom: 1px solid #000;
     background: #E3E4DD;
 }
 
 .genealogy-logo {
     font-weight: 800;
-    font-size: 18px;
+    font-size: toRem(18);
     letter-spacing: -0.05em;
 }
 
 .nav-btn {
     background: transparent;
     border: 1px solid #000;
-    padding: 8px 16px;
-    font-size: 11px;
+    padding: toRem(8) toRem(16);
+    font-size: toRem(11);
     font-weight: 700;
     cursor: pointer;
     transition: background 0.2s;
+    height: fit-content;
 }
 
 .nav-btn:hover {
@@ -161,53 +162,53 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: toRem(40);
 }
 
 .auth-box {
     width: 100%;
-    max-width: 500px;
+    max-width: toRem(500);
 }
 
 .auth-stage {
-    margin-bottom: 48px;
+    margin-bottom: toRem(48);
     text-align: center;
 }
 
 .auth-stage h2 {
-    font-size: 48px;
+    font-size: toRem(48);
     letter-spacing: -0.04em;
     margin: 0;
     line-height: 1;
 }
 
 .subtitle {
-    font-size: 16px;
+    font-size: toRem(16);
     color: #333333;
-    margin-top: 12px;
+    margin-top: toRem(12);
 }
 
 .auth-grid {
     background: #fff;
     border: 1px solid #000;
-    padding: 40px;
+    padding: toRem(40);
 }
 
 .social-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: toRem(12);
 }
 
 .btn-genealogy-social {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 14px;
+    gap: toRem(12);
+    padding: toRem(14);
     border: 1px solid #000;
     background: #fff;
-    font-size: 11px;
+    font-size: toRem(11);
     font-weight: 700;
     letter-spacing: 0.05em;
     cursor: pointer;
@@ -218,14 +219,10 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
     background: #f5f5f5;
 }
 
-.btn-genealogy-social:active {
-    transform: translateY(1px);
-}
-
 .divider {
     display: flex;
     align-items: center;
-    margin: 32px 0;
+    margin: toRem(32) 0;
     font-family: 'JetBrains Mono', monospace;
 }
 
@@ -237,8 +234,8 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
 }
 
 .divider span {
-    margin: 0 16px;
-    font-size: 10px;
+    margin: 0 toRem(16);
+    font-size: toRem(10);
     font-weight: 600;
     color: #888;
 }
@@ -246,26 +243,26 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
 .email-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: toRem(24);
 }
 
 .input-genealogy {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: toRem(8);
 }
 
 .input-genealogy label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: toRem(10);
     font-weight: 700;
     color: #000;
 }
 
 .input-genealogy input {
-    padding: 14px;
+    padding: toRem(14);
     border: 1px solid #000;
-    font-size: 14px;
+    font-size: toRem(14);
     outline: none;
     background: #fff;
 }
@@ -275,12 +272,12 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
 }
 
 .btn-genealogy-primary {
-    margin-top: 8px;
-    padding: 16px;
+    margin-top: toRem(8);
+    padding: toRem(16);
     background: #008412;
     color: #fff;
     border: 1px solid #000;
-    font-size: 11px;
+    font-size: toRem(11);
     font-weight: 800;
     letter-spacing: 0.05em;
     cursor: pointer;
@@ -291,18 +288,14 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
     filter: brightness(1.1);
 }
 
-.btn-genealogy-primary:active {
-    transform: translateY(1px);
-}
-
 .genealogy-footer {
-    margin-top: 24px;
+    margin-top: toRem(24);
     text-align: center;
 }
 
 .genealogy-footer p {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: toRem(10);
     color: #666;
 }
 
@@ -315,17 +308,17 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
     border-radius: 0 !important;
 }
 
-@media (max-width: 600px) {
+@media (max-width: toRem(600)) {
     .genealogy-header {
-        padding: 0 20px;
+        padding: 0 toRem(20);
     }
 
     .auth-grid {
-        padding: 24px;
+        padding: toRem(24);
     }
 
     .auth-stage h2 {
-        font-size: 32px;
+        font-size: toRem(32);
     }
 }
 </style>

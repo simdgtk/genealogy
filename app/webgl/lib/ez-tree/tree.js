@@ -705,7 +705,6 @@ vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {
   vec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );
 
   #ifdef USE_GRADIENTMAP
-    // Use .rgb instead of .r to support colored gradient maps
     return texture2D( gradientMap, coord ).rgb;
   #else
     vec2 fw = fwidth( coord ) * 0.5;

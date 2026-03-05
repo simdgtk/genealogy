@@ -3,7 +3,8 @@
         <div class="auth-bar">
             <template v-if="isLoggedIn">
                 <button @click="handleDashboard" class="auth-btn">Tableau de bord</button>
-                <button v-if="currentFamilyId" @click="handleEditFamily" class="auth-btn highlight">Gérer cette famille</button>
+                <button v-if="currentFamilyId" @click="handleEditFamily" class="auth-btn highlight">Gérer cette
+                    famille</button>
                 <button @click="handleLogout" class="auth-btn">Se déconnecter</button>
             </template>
             <template v-else>
@@ -47,19 +48,19 @@ const handleLogout = async () => {
 
 const fetchPersons = async () => {
     let url = "/api/persons"
-    
+
     if (isLoggedIn.value) {
         // Fetch user's families
         const familiesRes = await fetch("/api/families")
         const families = await familiesRes.json()
-        
+
         if (families && families.length > 0) {
             // Take the first family for now
             currentFamilyId.value = families[0]._id
             url += `?familyId=${currentFamilyId.value}`
         }
     }
-    
+
     const res = await fetch(url)
     const data = await res.json()
     return data
@@ -76,7 +77,7 @@ onMounted(async () => {
     if (canvas.value) {
         const SceneManagerModule = await import('~/webgl/SceneManager')
         sceneManager = new SceneManagerModule.default(canvas.value)
-        
+
         // Initial load
         await updateTree()
     }
@@ -94,7 +95,8 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss">
+@use "~/styles/main.scss";
 .tree-page {
     position: fixed;
     top: 0;
@@ -106,18 +108,19 @@ onBeforeUnmount(() => {
 
 .auth-bar {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    bottom: 2.55%;
+    right: 2%;
     z-index: 100;
     display: flex;
-    gap: 10px;
+    gap: toRem(10);
+    height: fit-content;
 }
 
 .auth-btn {
     background: white;
     border: 1px solid black;
-    padding: 8px 16px;
-    font-size: 12px;
+    padding: toRem(8) toRem(16);
+    font-size: toRem(12);
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -125,7 +128,6 @@ onBeforeUnmount(() => {
 
 .auth-btn:hover {
     background: #f0f0f0;
-    transform: translateY(-2px);
 }
 
 .auth-btn.highlight {

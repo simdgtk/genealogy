@@ -2,8 +2,15 @@
 import { ref, onMounted } from "vue";
 import { authClient } from "~/lib/auth-client";
 
-const { data: families } = await useFetch<any[]>("/api/families");
+const families = ref<any[]>([]);
 const session = ref<any>(null);
+
+const loadFamilies = async () => {
+    const data = await $fetch<any[]>("/api/families");
+    families.value = data || [];
+};
+
+await loadFamilies();
 
 onMounted(async () => {
     const res = await authClient.getSession();
@@ -14,12 +21,31 @@ const handleLogout = async () => {
     await authClient.signOut();
     navigateTo("/login");
 };
+
+const handleDeleteFamily = async (family: any) => {
+    if (!confirm(`Supprimer la famille "${family.name}" ? Cette action est irréversible.`)) return;
+    try {
+        await $fetch("/api/family", {
+            method: "DELETE",
+            body: { name: family.name },
+        });
+        await loadFamilies();
+    } catch (err) {
+        console.error("Erreur suppression famille :", err);
+        alert("Impossible de supprimer la famille.");
+    }
+};
 </script>
 
 <template>
     <div class="genealogy-auth">
         <header class="genealogy-header">
-            <div class="genealogy-logo"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M198.1,62.59a76,76,0,0,0-140.2,0A71.71,71.71,0,0,0,16,127.8C15.9,166,48,199,86.14,200A72.09,72.09,0,0,0,120,192.47V232a8,8,0,0,0,16,0V192.47A72.17,72.17,0,0,0,168,200l1.82,0C208,199,240.11,166,240,127.8A71.71,71.71,0,0,0,198.1,62.59ZM169.45,184a56.08,56.08,0,0,1-33.45-10v-41l43.58-21.78a8,8,0,1,0-7.16-14.32L136,115.06V88a8,8,0,0,0-16,0v51.06L83.58,120.84a8,8,0,1,0-7.16,14.32L120,156.94v17a56,56,0,0,1-33.45,10C56.9,183.23,31.92,157.52,32,127.84A55.77,55.77,0,0,1,67.11,76a8,8,0,0,0,4.53-4.67,60,60,0,0,1,112.72,0A8,8,0,0,0,188.89,76,55.79,55.79,0,0,1,224,127.84C224.08,157.52,199.1,183.23,169.45,184Z"></path></svg></div>
+            <div class="genealogy-logo"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000"
+                    viewBox="0 0 256 256">
+                    <path
+                        d="M198.1,62.59a76,76,0,0,0-140.2,0A71.71,71.71,0,0,0,16,127.8C15.9,166,48,199,86.14,200A72.09,72.09,0,0,0,120,192.47V232a8,8,0,0,0,16,0V192.47A72.17,72.17,0,0,0,168,200l1.82,0C208,199,240.11,166,240,127.8A71.71,71.71,0,0,0,198.1,62.59ZM169.45,184a56.08,56.08,0,0,1-33.45-10v-41l43.58-21.78a8,8,0,1,0-7.16-14.32L136,115.06V88a8,8,0,0,0-16,0v51.06L83.58,120.84a8,8,0,1,0-7.16,14.32L120,156.94v17a56,56,0,0,1-33.45,10C56.9,183.23,31.92,157.52,32,127.84A55.77,55.77,0,0,1,67.11,76a8,8,0,0,0,4.53-4.67,60,60,0,0,1,112.72,0A8,8,0,0,0,188.89,76,55.79,55.79,0,0,1,224,127.84C224.08,157.52,199.1,183.23,169.45,184Z">
+                    </path>
+                </svg></div>
             <nav class="genealogy-nav">
                 <span class="user-email" v-if="session?.user">{{ session.user.email }}</span>
                 <button @click="handleLogout" class="nav-btn">Déconnexion</button>
@@ -40,8 +66,11 @@ const handleLogout = async () => {
                                 <span class="family-name">{{ family.name }}</span>
                             </div>
                             <div class="family-actions">
-                                <NuxtLink :to="`/tree/${family._id}`" class="action-btn view-btn">Voir l'arbre</NuxtLink>
-                                <NuxtLink :to="`/famille/${family._id}`" class="action-btn edit-btn">Gérer</NuxtLink>
+                                <button @click="handleDeleteFamily(family)"
+                                    class="action-btn delete-btn">Supprimer</button>
+                                <NuxtLink :to="`/tree/${family._id}`" class="action-btn edit-btn">Gérer
+                                </NuxtLink>
+                                <NuxtLink :to="`/famille/${family._id}`" class="action-btn view-btn">Voir l'arbre</NuxtLink>
                             </div>
                         </div>
                     </div>
@@ -59,7 +88,7 @@ const handleLogout = async () => {
     </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .genealogy-auth {
     background-color: #E3E4DD;
     color: #000;
@@ -70,36 +99,37 @@ const handleLogout = async () => {
 }
 
 .genealogy-header {
-    height: 64px;
+    height: toRem(64);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 40px;
+    padding: 0 toRem(40);
     border-bottom: 1px solid #000;
     background: #E3E4DD;
 }
 
 .genealogy-logo {
     font-weight: 800;
-    font-size: 18px;
+    font-size: toRem(18);
     letter-spacing: -0.05em;
 }
 
 .user-email {
-    margin-right: 20px;
+    margin-right: toRem(20);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: toRem(10);
     font-weight: 600;
 }
 
 .nav-btn {
     background: transparent;
     border: 1px solid #000;
-    padding: 8px 16px;
-    font-size: 11px;
+    padding: toRem(8) toRem(16);
+    font-size: toRem(11);
     font-weight: 700;
     cursor: pointer;
     transition: background 0.2s;
+    height: fit-content;
 }
 
 .nav-btn:hover {
@@ -111,39 +141,39 @@ const handleLogout = async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: toRem(40);
 }
 
 .auth-box {
     width: 100%;
-    max-width: 600px;
+    max-width: toRem(600);
 }
 
 .auth-stage {
-    margin-bottom: 48px;
+    margin-bottom: toRem(48);
     text-align: center;
 }
 
 .auth-stage h2 {
-    font-size: 48px;
+    font-size: toRem(48);
     letter-spacing: -0.04em;
     margin: 0;
     line-height: 1;
 }
 
 .subtitle {
-    font-size: 16px;
+    font-size: toRem(16);
     color: #333333;
-    margin-top: 12px;
+    margin-top: toRem(12);
 }
 
 .auth-grid {
     background: #fff;
     border: 1px solid #000;
-    padding: 40px;
+    padding: toRem(40);
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: toRem(32);
 }
 
 .family-list {
@@ -156,7 +186,7 @@ const handleLogout = async () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
+    padding: toRem(20);
     border-bottom: 1px solid #000;
     text-decoration: none;
     color: inherit;
@@ -173,21 +203,33 @@ const handleLogout = async () => {
 
 .family-name {
     font-weight: 700;
-    font-size: 18px;
+    font-size: toRem(18);
 }
 
 .family-actions {
     display: flex;
-    gap: 12px;
+    gap: toRem(12);
 }
 
 .action-btn {
-    padding: 8px 16px;
-    font-size: 11px;
+    padding: toRem(8) toRem(16);
+    font-size: toRem(11);
     font-weight: 700;
     text-decoration: none;
     border: 1px solid #000;
+    cursor: pointer;
+    background: transparent;
     transition: all 0.2s;
+}
+
+.delete-btn {
+    background: #cc0000;
+    color: #fff;
+    border-color: #990000;
+}
+
+.delete-btn:hover {
+    background: #aa0000;
 }
 
 .view-btn {
@@ -210,7 +252,7 @@ const handleLogout = async () => {
 
 .empty-state {
     text-align: center;
-    padding: 20px;
+    padding: toRem(20);
     font-style: italic;
     color: #666;
 }
@@ -218,11 +260,11 @@ const handleLogout = async () => {
 .btn-genealogy-primary {
     display: block;
     text-align: center;
-    padding: 16px;
+    padding: toRem(16);
     background: #008412;
     color: #fff;
     border: 1px solid #000;
-    font-size: 11px;
+    font-size: toRem(11);
     font-weight: 800;
     letter-spacing: 0.05em;
     cursor: pointer;
@@ -234,25 +276,21 @@ const handleLogout = async () => {
     filter: brightness(1.1);
 }
 
-.create-btn:active {
-    transform: translateY(1px);
-}
-
 * {
     border-radius: 0 !important;
 }
 
-@media (max-width: 600px) {
+@media (max-width: toRem(600)) {
     .genealogy-header {
-        padding: 0 20px;
+        padding: 0 toRem(20);
     }
 
     .auth-grid {
-        padding: 24px;
+        padding: toRem(24);
     }
 
     .auth-stage h2 {
-        font-size: 32px;
+        font-size: toRem(32);
     }
 }
 </style>

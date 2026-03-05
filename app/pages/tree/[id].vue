@@ -1,130 +1,267 @@
 <template>
-    <div class="tree-page">
-        <div class="auth-bar">
-            <template v-if="isLoggedIn">
-                <button @click="handleDashboard" class="auth-btn">Tableau de bord</button>
-                <button @click="handleEditFamily" class="auth-btn highlight">Gérer cette famille</button>
-                <button @click="handleLogout" class="auth-btn">Se déconnecter</button>
-            </template>
-            <template v-else>
-                <button @click="handleLogin" class="auth-btn">Se connecter</button>
-            </template>
+  <div class="genealogy-auth">
+    <header class="genealogy-header">
+      <div class="header-left">
+        <NuxtLink to="/dashboard" class="nav-btn">← Tableau de bord</NuxtLink>
+      </div>
+      <nav class="genealogy-nav">
+        <NuxtLink :to="`/famille/${familyId}`" class="btn-genealogy-primary">Voir l'arbre</NuxtLink>
+      </nav>
+    </header>
+
+    <main class="genealogy-content">
+      <div class="auth-box wide-box">
+        <div class="auth-stage">
+          <h2>Gestion de la famille</h2>
+          <p class="subtitle">Gérez les membres de cette famille</p>
         </div>
-        <canvas ref="canvas" class="webgl-canvas"></canvas>
-    </div>
+
+        <div class="split-layout">
+          <section class="auth-grid form-section">
+            <h3 class="section-title">{{ selectedPerson ? 'Modifier une personne' : 'Ajouter une personne' }}</h3>
+            <span v-if="persons.length === 0" class="ancestor-message">{{ texts.ancestor }}</span>
+            <PersonForm :persons="persons" :person="selectedPerson" @submit="handleSavePerson"
+              @cancel="selectedPerson = null" />
+          </section>
+
+          <section class="auth-grid list-section">
+            <h3 class="section-title">Personnes actuelles</h3>
+            <PersonList :persons="persons" @delete="handleDeletePerson" @edit="handleEditPerson" />
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import type SceneManager from '~/webgl/SceneManager'
-import { authClient } from '~/lib/client'
+import { ref } from "vue";
+import { useRoute } from "vue-router";
+import PersonForm from "~/components/PersonForm.vue";
+import PersonList from "~/components/PersonList.vue";
+import type { Person } from "~/types/person";
 
-const route = useRoute()
-const familyId = route.params.id as string
+const route = useRoute();
+const familyId = route.params.id as string;
 
-const session = authClient.useSession()
-const isLoggedIn = computed(() => !!session.value?.data)
-
-const canvas = ref<HTMLCanvasElement | null>(null)
-let sceneManager: SceneManager | null = null
-
-const handleLogin = () => {
-    navigateTo('/login')
+if (!familyId) {
+  navigateTo("/dashboard");
 }
 
-const handleDashboard = () => {
-    navigateTo('/dashboard')
-}
+const texts = {
+  ancestor: "Ajouter l'ancêtre",
+  deleteAncestor: "Supprimer l'ancêtre",
+  person: "Ajouter un enfant",
+  deletePerson: "Supprimer l'enfant",
+  relative: "Ajouter un proche",
+  deleteRelative: "Supprimer le proche"
+};
 
-const handleEditFamily = () => {
-    navigateTo(`/famille/${familyId}`)
-}
+const persons = ref<Person[]>(await $fetch<Person[]>(`/api/persons?familyId=${familyId}`) || []);
 
-const handleLogout = async () => {
-    await authClient.signOut()
-    window.location.href = '/'
-}
+const selectedPerson = ref<Person | null>(null);
 
-const fetchPersons = async () => {
-    const res = await fetch(`/api/persons?familyId=${familyId}`)
-    const data = await res.json()
-    return data
-}
+const handleEditPerson = (person: Person) => {
+  selectedPerson.value = person;
+};
 
-const updateTree = async () => {
-    if (sceneManager) {
-        const persons = await fetchPersons()
-        sceneManager.updatePersons(persons)
+const handleSavePerson = async (personData: any) => {
+  try {
+    const formData = new FormData();
+
+    if (personData.surname) formData.append("surname", personData.surname);
+    if (personData.name) formData.append("name", personData.name);
+    if (personData.birthDate) formData.append("birthDate", personData.birthDate);
+    if (personData.deathDate) formData.append("deathDate", personData.deathDate);
+    if (personData.gender) formData.append("gender", personData.gender);
+    if (personData.parent1Id) formData.append("parent1Id", String(personData.parent1Id));
+    formData.append("familyId", familyId);
+
+    if (personData.image) {
+      formData.append("image", personData.image);
     }
-}
 
-onMounted(async () => {
-    if (canvas.value) {
-        const SceneManagerModule = await import('~/webgl/SceneManager')
-        sceneManager = new SceneManagerModule.default(canvas.value)
-        
-        await updateTree()
+    let result: Person;
+    if (selectedPerson.value?._id) {
+      formData.append("id", selectedPerson.value._id);
+      result = await $fetch<Person>("/api/person", {
+        method: "PUT",
+        body: formData,
+      });
+    } else {
+      result = await $fetch<Person>("/api/person", {
+        method: "POST",
+        body: formData,
+      });
     }
-})
 
-onBeforeUnmount(() => {
-    if (sceneManager) {
-        sceneManager.destroy()
+    if (result) {
+      if (selectedPerson.value) {
+        const index = persons.value.findIndex(p => p._id === result._id);
+        if (index !== -1) {
+          persons.value[index] = result;
+        }
+      } else {
+        persons.value.push(result);
+      }
+    } else {
+      persons.value = await $fetch<Person[]>(`/api/persons?familyId=${familyId}`) || [];
     }
-})
+
+    selectedPerson.value = null;
+  } catch (err) {
+    console.error("Error saving person:", err);
+  }
+};
+
+const handleDeletePerson = async (id: string) => {
+  try {
+    await $fetch(`/api/person`, {
+      method: "DELETE",
+      body: { id },
+    });
+    persons.value = persons.value.filter((person: Person) => person._id !== id);
+  } catch (err) {
+    console.error("Error deleting person:", err);
+  }
+};
 </script>
 
-<style scoped>
-.tree-page {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
+<style lang="scss" scoped>
+.genealogy-auth {
+  background-color: $color-bg;
+  color: $color-text;
+  font-family: $font-sans;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.auth-bar {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 100;
-    display: flex;
-    gap: 10px;
+.genealogy-header {
+  height: toRem(64);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 toRem(40);
+  border-bottom: 1px solid $color-border;
+  background: $color-bg;
 }
 
-.auth-btn {
-    background: white;
-    border: 1px solid black;
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.nav-btn {
+  background: transparent;
+  border: 1px solid $color-border;
+  padding: toRem(8) toRem(16);
+  font-size: toRem(11);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  color: $color-text;
+  transition: background 0.2s;
+    height: fit-content;
 }
 
-.auth-btn:hover {
-    background: #f0f0f0;
-    transform: translateY(-2px);
+.nav-btn:hover {
+  background: $color-surface;
 }
 
-.auth-btn.highlight {
-    background: #008412;
-    color: white;
-    border-color: #006b0f;
+.btn-genealogy-primary {
+  padding: toRem(8) toRem(16);
+  background: $color-accent;
+  color: $color-surface;
+  border: 1px solid $color-border;
+  font-size: toRem(11);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.1s;
 }
 
-.auth-btn.highlight:hover {
-    background: #00a016;
+.btn-genealogy-primary:hover {
+  filter: brightness(1.1);
 }
 
-.webgl-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    outline: none;
+.genealogy-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: toRem(40);
+}
+
+.auth-box {
+  width: 100%;
+}
+
+.wide-box {
+  max-width: toRem(1200);
+}
+
+.auth-stage {
+  margin-bottom: toRem(48);
+  text-align: center;
+}
+
+.auth-stage h2 {
+  font-size: toRem(48);
+  letter-spacing: -0.04em;
+  margin: 0;
+  line-height: 1;
+}
+
+.subtitle {
+  font-size: toRem(16);
+  color: $color-muted;
+  margin-top: toRem(12);
+}
+
+.split-layout {
+  display: flex;
+  gap: toRem(32);
+  align-items: flex-start;
+}
+
+.auth-grid {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  padding: toRem(40);
+}
+
+.form-section {
+  flex: 1;
+  position: sticky;
+  top: toRem(40);
+}
+
+.list-section {
+  flex: 2;
+}
+
+.section-title {
+  font-size: toRem(24);
+  margin-top: 0;
+  margin-bottom: toRem(24);
+  letter-spacing: -0.02em;
+}
+
+.ancestor-message {
+  display: block;
+  font-family: $font-mono;
+  font-size: toRem(12);
+  color: $color-accent;
+  margin-bottom: toRem(24);
+}
+
+* {
+  border-radius: 0 !important;
+}
+
+@media (max-width: toRem(900)) {
+  .split-layout {
+    flex-direction: column;
+  }
+
+  .form-section {
+    position: static;
+  }
 }
 </style>

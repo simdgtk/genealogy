@@ -1,36 +1,36 @@
 <template>
     <form @submit.prevent="handleSubmit" class="person-form">
-        <div class="form-group">
+        <div class="input-genealogy">
             <label>Nom</label>
-            <input type="text" v-model="form.surname" placeholder="Nom" required />
+            <input type="text" v-model="form.surname" placeholder="Nom de famille" required />
         </div>
 
-        <div class="form-group">
+        <div class="input-genealogy">
             <label>Prénom</label>
             <input type="text" v-model="form.name" placeholder="Prénom" />
         </div>
 
-        <div class="form-group">
+        <div class="input-genealogy">
             <label>Date de naissance</label>
             <input type="date" v-model="form.birthDate" />
         </div>
 
-        <div class="form-group">
+        <div class="input-genealogy">
             <label>Date de décès</label>
             <input type="date" v-model="form.deathDate" />
         </div>
 
-        <div class="form-group">
+        <div class="input-genealogy">
             <label>Genre</label>
             <select v-model="form.gender">
                 <option value="">Sélectionner le genre</option>
                 <option value="Male">Homme</option>
                 <option value="Female">Femme</option>
-                <option value="Other">Autre / Inconnu / Non spécifié</option>
+                <option value="Other">Autre / Inconnu</option>
             </select>
         </div>
 
-        <div class="form-group">
+        <div class="input-genealogy">
             <label>Parent</label>
             <select v-model="form.parent1Id">
                 <option :value="null">Aucun</option>
@@ -40,13 +40,13 @@
             </select>
         </div>
 
-        <div class="form-group">
+        <div class="input-genealogy">
             <label>Image</label>
             <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" />
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="submit-btn">
+            <button type="submit" class="submit-btn btn-genealogy-primary">
                 {{ person ? 'Modifier la personne' : 'Ajouter la personne' }}
             </button>
             <button v-if="person" type="button" @click="$emit('cancel')" class="cancel-btn">
@@ -81,7 +81,14 @@ const form = ref<Partial<Person> & { image: File | null }>({
     image: null,
 })
 
+const fileInput = ref<HTMLInputElement | null>(null)
+
 watch(() => props.person, (newPerson) => {
+    // Reset le champ fichier visuellement à chaque changement de personne
+    if (fileInput.value) {
+        fileInput.value.value = ''
+    }
+
     if (newPerson) {
         form.value = {
             surname: newPerson.surname || "",
@@ -106,8 +113,6 @@ watch(() => props.person, (newPerson) => {
         }
     }
 }, { immediate: true })
-
-const fileInput = ref<HTMLInputElement | null>(null)
 
 const handleFileUpload = (event: Event) => {
     const target = event.target as HTMLInputElement
@@ -140,61 +145,80 @@ const handleSubmit = () => {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .person-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    max-width: 400px;
+    gap: toRem(24);
+    width: 100%;
 }
 
-.form-group {
+.input-genealogy {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: toRem(8);
 }
 
-.form-group label {
-    font-weight: bold;
+.input-genealogy label {
+    font-family: $font-mono;
+    font-size: toRem(10);
+    font-weight: 700;
+    color: $color-text;
+    text-transform: uppercase;
 }
 
-.form-group input,
-.form-group select {
-    padding: 0.5rem;
-    border: 1px solid #000;
+.input-genealogy input,
+.input-genealogy select {
+    padding: toRem(14);
+    border: 1px solid $color-border;
+    font-size: toRem(14);
+    outline: none;
+    background: $color-surface;
+    font-family: $font-sans;
+}
+
+.input-genealogy input:focus,
+.input-genealogy select:focus {
+    background: #fdfdfd;
+}
+
+.input-genealogy input[type="file"] {
+    padding: toRem(10);
 }
 
 .form-actions {
     display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
+    gap: toRem(12);
+    margin-top: toRem(8);
+}
+
+.submit-btn,
+.cancel-btn {
+    padding: toRem(16);
+    font-size: toRem(11);
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border: 1px solid $color-border;
+    transition: filter 0.1s, background 0.1s;
+    flex: 1;
 }
 
 .submit-btn {
-    background-color: #008412;
-    color: white;
-    border: none;
-    padding: 0.75rem;
-    cursor: pointer;
-    font-weight: bold;
-    flex: 1;
-}
-
-.cancel-btn {
-    background-color: #666;
-    color: white;
-    border: none;
-    padding: 0.75rem;
-    cursor: pointer;
-    font-weight: bold;
-    flex: 1;
+    background: $color-accent;
+    color: $color-surface;
 }
 
 .submit-btn:hover {
-    background-color: #006b0e;
+    filter: brightness(1.1);
+}
+
+.cancel-btn {
+    background: transparent;
+    color: $color-text;
 }
 
 .cancel-btn:hover {
-    background-color: #444;
+    background: #f5f5f5;
 }
 </style>
