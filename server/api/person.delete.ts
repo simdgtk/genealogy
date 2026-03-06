@@ -32,7 +32,19 @@ export default defineEventHandler(async (event) => {
     }
 
     const family = await Family.findById(person.familyId);
-    if (!family || family.creatorId !== session.user.id) {
+    if (!family) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Family not found",
+      });
+    }
+
+    const isCreator = family.creatorId === session.user.id;
+    const isEditor = (family.sharedWith as any[])?.some(
+      (share: any) => share.userId === session.user.id && share.canEdit,
+    );
+
+    if (!isCreator && !isEditor) {
       throw createError({
         statusCode: 403,
         statusMessage:

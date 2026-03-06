@@ -72,7 +72,7 @@ const handleCreateFamily = async () => {
 .genealogy-auth {
     background-color: #E3E4DD;
     color: #000;
-    font-family: sans-serif;
+    font-family: $font-mono;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -161,7 +161,7 @@ const handleCreateFamily = async () => {
 }
 
 .input-genealogy label {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: $font-mono;
     font-size: toRem(10);
     font-weight: 700;
     color: #000;
@@ -207,7 +207,7 @@ const handleCreateFamily = async () => {
 }
 
 .genealogy-footer p {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: $font-mono;
     font-size: toRem(10);
     color: #666;
 }

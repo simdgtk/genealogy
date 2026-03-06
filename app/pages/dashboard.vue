@@ -98,7 +98,7 @@ const handleDeleteFamily = async (family: any) => {
 .genealogy-auth {
     background-color: #E3E4DD;
     color: #000;
-    font-family: sans-serif;
+    font-family: $font-sans;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -122,7 +122,7 @@ const handleDeleteFamily = async (family: any) => {
 
 .user-email {
     margin-right: toRem(20);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: $font-mono;
     font-size: toRem(10);
     font-weight: 600;
 }

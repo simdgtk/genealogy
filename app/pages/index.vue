@@ -50,14 +50,13 @@ const fetchPersons = async () => {
     let url = "/api/persons"
 
     if (isLoggedIn.value) {
-        // Fetch user's families
+        // user's familly
         const families = await $fetch<any[]>("/api/families", {
             headers: useRequestHeaders(['cookie']) as Record<string, string>,
             credentials: 'include'
         }).catch(() => [])
 
         if (families && families.length > 0) {
-            // Take the first family for now
             currentFamilyId.value = families[0]._id
             url += `?familyId=${currentFamilyId.value}`
         }
@@ -82,12 +81,10 @@ onMounted(async () => {
         const SceneManagerModule = await import('~/webgl/SceneManager')
         sceneManager = new SceneManagerModule.default(canvas.value)
 
-        // Initial load
         await updateTree()
     }
 })
 
-// Watch for login changes to update the tree
 watch(isLoggedIn, async () => {
     await updateTree()
 })
@@ -109,6 +106,7 @@ onBeforeUnmount(() => {
     width: 100vw;
     height: 100vh;
     z-index: 0;
+    font-family: $font-sans;
 }
 
 .auth-bar {

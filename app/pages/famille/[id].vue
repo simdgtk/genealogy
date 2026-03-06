@@ -2,8 +2,8 @@
     <div class="tree-page">
         <div class="auth-bar">
             <template v-if="isLoggedIn">
-                <button @click="handleDashboard" class="nav-btn">Tableau de bord</button>
-                <button @click="handleEditFamily" class="nav-btn highlight">Gérer cette famille</button>
+                <button v-if="isEditor" @click="handleDashboard" class="nav-btn">Tableau de bord</button>
+                <button v-if="isEditor" @click="handleEditFamily" class="nav-btn highlight">Gérer cette famille</button>
                 <button @click="handleLogout" class="nav-btn">Se déconnecter</button>
             </template>
             <template v-else>
@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
+import { onMounted, onBeforeUnmount, ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import type SceneManager from '~/webgl/SceneManager'
 import { authClient } from '~/lib/client'
@@ -28,6 +28,29 @@ const isLoggedIn = computed(() => !!session.value?.data)
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 let sceneManager: SceneManager | null = null
+
+const isEditor = ref(false)
+
+const checkEditorMode = async () => {
+    try {
+        const family = await $fetch<any>(`/api/family?id=${familyId}`, {
+            headers: useRequestHeaders(['cookie']) as Record<string, string>,
+            credentials: 'include'
+        });
+        const userId = session.value?.data?.user?.id;
+
+        if (userId === family.creatorId) {
+            isEditor.value = true;
+        } else {
+            const share = family.sharedWith?.find((s: any) => s.userId === userId);
+            if (share && share.canEdit) {
+                isEditor.value = true;
+            }
+        }
+    } catch (err) {
+        console.error("Could not load family details", err);
+    }
+}
 
 const handleLogin = () => {
     navigateTo('/login')
@@ -65,6 +88,9 @@ onMounted(async () => {
         sceneManager = new SceneManagerModule.default(canvas.value)
 
         await updateTree()
+    }
+    if (isLoggedIn.value) {
+        await checkEditorMode()
     }
 })
 

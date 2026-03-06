@@ -14,7 +14,12 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const families = await Family.find({ creatorId: session.user.id }).exec();
+    const families = await Family.find({
+      $or: [
+        { creatorId: session.user.id },
+        { "sharedWith.userId": session.user.id },
+      ],
+    }).exec();
     return families;
   } catch (error: any) {
     throw createError({

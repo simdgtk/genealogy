@@ -1,7 +1,7 @@
 import { readMultipartFormData } from "h3";
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import sharp from "sharp";
 
 import { Person } from "../models/Person";
 import { auth } from "./auth/auth_file/auth";
@@ -40,19 +40,18 @@ export default defineEventHandler(async (event) => {
         const finalPath = path.join(uploadDir, finalFilename);
 
         try {
-          execSync(
-            `/opt/homebrew/bin/magick - -resize "700x700>" -quality 80 webp:"${finalPath}"`,
-            {
-              input: field.data,
-              env: {
-                ...process.env,
-                PATH: `/opt/homebrew/bin:${process.env.PATH}`,
-              },
-            },
-          );
+          await sharp(field.data)
+            .resize({
+              width: 700,
+              height: 700,
+              fit: "inside",
+              withoutEnlargement: true,
+            })
+            .webp({ quality: 80 })
+            .toFile(finalPath);
           mediaUrl = `/uploads/${finalFilename}`;
-        } catch (magickError) {
-          console.error("Erreur ImageMagick :", magickError);
+        } catch (sharpError) {
+          console.error("Erreur Sharp :", sharpError);
           try {
             fs.writeFileSync(
               finalPath.replace(
@@ -100,7 +99,19 @@ export default defineEventHandler(async (event) => {
     }
 
     const family = await Family.findById(person.familyId);
-    if (!family || family.creatorId !== session.user.id) {
+    if (!family) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Family not found",
+      });
+    }
+
+    const isCreator = family.creatorId === session.user.id;
+    const isEditor = (family.sharedWith as any[])?.some(
+      (share: any) => share.userId === session.user.id && share.canEdit,
+    );
+
+    if (!isCreator && !isEditor) {
       throw createError({
         statusCode: 403,
         statusMessage:

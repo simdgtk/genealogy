@@ -216,7 +216,7 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
     display: flex;
     align-items: center;
     margin: toRem(32) 0;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: $font-mono;
 }
 
 .divider::before,
@@ -246,7 +246,7 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
 }
 
 .input-genealogy label {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: $font-mono;
     font-size: toRem(10);
     font-weight: 700;
     color: #000;
@@ -315,7 +315,7 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
 }
 
 .genealogy-footer p {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: $font-mono;
     font-size: toRem(10);
     color: #666;
 }

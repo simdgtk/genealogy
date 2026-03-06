@@ -6,7 +6,7 @@ export interface AppConfig {
   tree: TreeOptions;
 }
 
-// Helpers pour faire correspondre le chemin de l'arbre à la base de données
+// pour faire correspondre le chemin de l'arbre à la base de données
 export const getChildren = (persons: any[], parentId: string | null) =>
   persons
     .filter((p: any) => p.parent1Id === parentId)

@@ -22,4 +22,16 @@ export default defineNuxtConfig({
     uri: process.env.MONGODB_URI || "",
     modelsDir: "server/models",
   },
+  app: {
+    head: {
+      title: "3D genealogy tapestry",
+      link: [
+        {
+          rel: "icon",
+          type: "image/svg+xml",
+          href: "/favicon.svg",
+        },
+      ],
+    },
+  },
 });

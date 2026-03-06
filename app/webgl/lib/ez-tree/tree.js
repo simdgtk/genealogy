@@ -3,10 +3,8 @@ import RNG from "./rng";
 import { Branch } from "./branch";
 import { Billboard, TreeType } from "./enums";
 import TreeOptions from "./options";
-import { loadPreset } from "./presets/index";
-import { getBarkTexture, getLeafTexture } from "./textures";
+import { getBarkTexture } from "./textures";
 import { Trellis } from "./trellis";
-// import { Portrait } from "./Portrait.ts";
 import { Portrait } from "./portrait";
 
 export class Tree extends THREE.Group {
@@ -687,8 +685,7 @@ export class Tree extends THREE.Group {
 
     const mat = new THREE.MeshToonMaterial({
       name: "branches",
-      color: new THREE.Color(0xffffff), // White color so gradientMap shows its original colors
-      gradientMap: this.getGradientTexture(), // Use generated gradient map
+      gradientMap: this.getGradientTexture(),
     });
 
     mat.onBeforeCompile = (shader) => {
@@ -700,7 +697,6 @@ export class Tree extends THREE.Group {
 #endif
 
 vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {
-  // dotNL will be from -1.0 to 1.0
   float dotNL = dot( normal, lightDirection );
   vec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );
 
@@ -716,11 +712,6 @@ vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {
     };
 
     if (this.options.bark.textured) {
-      // mat.map = getBarkTexture(
-      //   this.options.bark.type,
-      //   "color",
-      //   this.options.bark.textureScale,
-      // );
       mat.normalMap = getBarkTexture(
         this.options.bark.type,
         "normal",

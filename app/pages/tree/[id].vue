@@ -2,14 +2,18 @@
   <div class="genealogy-auth">
     <header class="genealogy-header">
       <div class="header-left">
-        <NuxtLink to="/dashboard" class="nav-btn">← Tableau de bord</NuxtLink>
+        <NuxtLink v-if="isEditor" to="/dashboard" class="nav-btn">← Tableau de bord</NuxtLink>
       </div>
       <nav class="genealogy-nav">
+        <button v-if="isCreator" @click="isShareModalOpen = true" class="nav-btn">Gérer les accès</button>
         <NuxtLink :to="`/famille/${familyId}`" class="btn-genealogy-primary">Voir l'arbre</NuxtLink>
       </nav>
     </header>
 
-    <main class="genealogy-content">
+    <ShareModal :isOpen="isShareModalOpen" :familyId="familyId" :sharedWith="sharedWith"
+      @close="isShareModalOpen = false" @shares-updated="updateShares" />
+
+    <main class="genealogy-content" v-if="isEditor">
       <div class="auth-box wide-box">
         <div class="auth-stage">
           <h2>Gestion de la famille</h2>
@@ -39,10 +43,53 @@ import { ref } from "vue";
 import { useRoute } from "vue-router";
 import PersonForm from "~/components/PersonForm.vue";
 import PersonList from "~/components/PersonList.vue";
+import ShareModal from "~/components/ShareModal.vue";
 import type { Person } from "~/types/person";
+import { authClient } from "~/lib/auth-client";
 
 const route = useRoute();
 const familyId = route.params.id as string;
+
+if (!familyId) {
+  navigateTo("/dashboard");
+}
+
+const isShareModalOpen = ref(false);
+const sharedWith = ref<any[]>([]);
+const isCreator = ref(false);
+const isEditor = ref(false);
+
+const loadFamilyDetails = async () => {
+  try {
+    const family = await $fetch<any>(`/api/family?id=${familyId}`, {
+      headers: useRequestHeaders(['cookie']) as Record<string, string>,
+      credentials: 'include'
+    });
+    sharedWith.value = family.sharedWith || [];
+
+    // Check if the current user is the creator or editor
+    const sessionRes = await authClient.getSession();
+    const userId = sessionRes?.data?.user?.id;
+
+    if (userId === family.creatorId) {
+      isCreator.value = true;
+      isEditor.value = true;
+    } else {
+      const share = family.sharedWith?.find((s: any) => s.userId === userId);
+      if (share && share.canEdit) {
+        isEditor.value = true;
+      }
+    }
+  } catch (err) {
+    console.error("Could not load family details", err);
+  }
+};
+
+await loadFamilyDetails();
+
+const updateShares = (newShares: any[]) => {
+  sharedWith.value = newShares;
+};
 
 if (!familyId) {
   navigateTo("/dashboard");

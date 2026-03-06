@@ -109,9 +109,10 @@ export default class SceneManager {
   initControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.enableZoom = false;
     this.controls.minPolarAngle = Math.PI / 2;
     this.controls.maxPolarAngle = Math.PI / 2;
+    this.controls.maxZoom = 3;
+    this.controls.minZoom = 0.5;
     this.controls.target.set(0, 0, 0);
   }
 

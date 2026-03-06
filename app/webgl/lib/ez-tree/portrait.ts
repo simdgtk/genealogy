@@ -46,6 +46,7 @@ function loadFrameModel(): Promise<THREE.Group> {
               child.material.depthTest = false;
               child.material.transparent = true;
               child.material.side = THREE.DoubleSide;
+              child.renderOrder = 1;
             }
           }
         });
@@ -133,9 +134,9 @@ export class Portrait extends THREE.Group {
     text.position.set(0, y, 5);
     text.font = "/fonts/Aktura-Regular.ttf";
     text.anchorX = "center";
-    // text.material.transparent = true;
-    // text.material.depthTest = false;
-    // text.renderOrder = 1;
+    text.material.transparent = true;
+    text.material.depthTest = false;
+    text.renderOrder = 1;
     text.sync();
     return text;
   }
