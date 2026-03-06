@@ -128,7 +128,7 @@ export default class Border {
     this.textTop.renderOrder = 1002;
     this.hudCamera.add(this.textTop);
 
-    this.textTop.material.depthTest = false;
+    // this.textTop.material.depthTest = false;
 
     this.textTop.sync();
 

@@ -35,18 +35,22 @@ function loadFrameModel(): Promise<THREE.Group> {
         cachedModel.position.sub(center);
 
         cachedModel.traverse((child) => {
+          child.position.y += 0.4;
+
           if (child.name === "Plane056_1") {
-            child.position.y += 0.005;
+            // child.position.y += 0.005;
             // child.rotation.y = Math.PI;
             // child.position.z = -maxDim / 2;
           }
           if (child instanceof THREE.Mesh) {
+            child.position.y += 0.05;
+
             child.userData.isCachedModel = true;
             if (child.material) {
-              child.material.depthTest = false;
-              child.material.transparent = true;
+              // child.material.depthTest = false;
+              // child.material.transparent = true;
               child.material.side = THREE.DoubleSide;
-              child.renderOrder = 1;
+              // child.renderOrder = 1;
             }
           }
         });
@@ -88,8 +92,8 @@ export class Portrait extends THREE.Group {
             if (child.name === "Plane056_1" && child instanceof THREE.Mesh) {
               child.material = new THREE.MeshBasicMaterial({
                 map: texture,
-                transparent: true,
-                depthTest: false,
+                // transparent: true,
+                // depthTest: false,
                 side: THREE.DoubleSide,
               });
             }
@@ -115,7 +119,6 @@ export class Portrait extends THREE.Group {
       "#000000",
       0.0,
     );
-    // this.textGender = this.createText(gender, 0.25, "#666666", -0.3);
 
     this.init();
   }
@@ -134,9 +137,8 @@ export class Portrait extends THREE.Group {
     text.position.set(0, y, 5);
     text.font = "/fonts/Aktura-Regular.ttf";
     text.anchorX = "center";
-    text.material.transparent = true;
-    text.material.depthTest = false;
-    text.renderOrder = 1;
+    text.position.z += 2;
+    text.position.y += 0.35;
     text.sync();
     return text;
   }
