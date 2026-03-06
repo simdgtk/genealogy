@@ -51,8 +51,10 @@ const fetchPersons = async () => {
 
     if (isLoggedIn.value) {
         // Fetch user's families
-        const familiesRes = await fetch("/api/families")
-        const families = await familiesRes.json()
+        const families = await $fetch<any[]>("/api/families", {
+            headers: useRequestHeaders(['cookie']) as Record<string, string>,
+            credentials: 'include'
+        }).catch(() => [])
 
         if (families && families.length > 0) {
             // Take the first family for now
@@ -61,8 +63,10 @@ const fetchPersons = async () => {
         }
     }
 
-    const res = await fetch(url)
-    const data = await res.json()
+    const data = await $fetch<any>(url, {
+        headers: useRequestHeaders(['cookie']) as Record<string, string>,
+        credentials: 'include'
+    }).catch(() => [])
     return data
 }
 
@@ -97,6 +101,7 @@ onBeforeUnmount(() => {
 
 <style lang="scss">
 @use "~/styles/main.scss";
+
 .tree-page {
     position: fixed;
     top: 0;

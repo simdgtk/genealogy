@@ -8,30 +8,32 @@ const isSignUp = ref(false);
 
 const handleEmailAuth = async () => {
     if (isSignUp.value) {
-        await authClient.signUp.email({
+        const { data, error } = await authClient.signUp.email({
             email: email.value,
             password: password.value,
             name: name.value,
             callbackURL: "/dashboard"
-        }, {
-            onSuccess: (ctx) => {
-                console.log(ctx)
-                navigateTo("/dashboard")
-            },
-            onError: (ctx) => alert(ctx.error.message),
         });
+
+        if (error) {
+            alert(error.message);
+        } else {
+            console.log(data);
+            navigateTo("/dashboard");
+        }
     } else {
-        await authClient.signIn.email({
+        const { data, error } = await authClient.signIn.email({
             email: email.value,
             password: password.value,
             callbackURL: "/dashboard"
-        }, {
-            onSuccess: (ctx) => {
-                console.log(ctx)
-                navigateTo("/dashboard")
-            },
-            onError: (ctx) => alert(ctx.error.message),
         });
+
+        if (error) {
+            alert(error.message);
+        } else {
+            console.log(data);
+            navigateTo("/dashboard");
+        }
     }
 };
 
@@ -53,11 +55,6 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
     <div class="genealogy-auth">
         <header class="genealogy-header">
             <div class="genealogy-logo"></div>
-            <nav class="genealogy-nav">
-                <button @click="isSignUp = !isSignUp" class="nav-btn">
-                    {{ isSignUp ? "S'inscrire" : "Se connecter" }}
-                </button>
-            </nav>
         </header>
 
         <main class="genealogy-content">
@@ -111,6 +108,17 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
                             {{ isSignUp ? 'S\'inscrire' : 'Se connecter' }}
                         </button>
                     </form>
+
+                    <div class="auth-toggle">
+                        <p v-if="!isSignUp">
+                            Pas encore de compte ?
+                            <button @click="isSignUp = true" class="btn-toggle">S'inscrire</button>
+                        </p>
+                        <p v-else>
+                            Déjà un compte ?
+                            <button @click="isSignUp = false" class="btn-toggle">Se connecter</button>
+                        </p>
+                    </div>
                 </div>
             </div>
         </main>
@@ -140,21 +148,6 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
     font-weight: 800;
     font-size: toRem(18);
     letter-spacing: -0.05em;
-}
-
-.nav-btn {
-    background: transparent;
-    border: 1px solid #000;
-    padding: toRem(8) toRem(16);
-    font-size: toRem(11);
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.2s;
-    height: fit-content;
-}
-
-.nav-btn:hover {
-    background: #fff;
 }
 
 .genealogy-content {
@@ -282,10 +275,38 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
     letter-spacing: 0.05em;
     cursor: pointer;
     transition: transform 0.1s;
+    text-align: center;
 }
 
 .btn-genealogy-primary:hover {
     filter: brightness(1.1);
+}
+
+.auth-toggle {
+    margin-top: toRem(24);
+    text-align: center;
+    font-size: toRem(12);
+    color: #666;
+}
+
+.auth-toggle p {
+    margin: 0;
+}
+
+.btn-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: toRem(12);
+    font-weight: 700;
+    color: #000;
+    text-decoration: underline;
+    cursor: pointer;
+    font-family: sans-serif;
+}
+
+.btn-toggle:hover {
+    color: #333;
 }
 
 .genealogy-footer {

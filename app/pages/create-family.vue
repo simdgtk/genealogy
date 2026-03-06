@@ -9,7 +9,9 @@ const handleCreateFamily = async () => {
     try {
         const res = await $fetch("/api/family", {
             method: "POST",
-            body: { name: familyName.value }
+            body: { name: familyName.value },
+            headers: useRequestHeaders(['cookie']) as Record<string, string>,
+            credentials: 'include'
         });
 
         if (res) {

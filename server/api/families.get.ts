@@ -3,7 +3,7 @@ import { Family } from "../models/Family";
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({
-    headers: event.headers,
+    headers: toWebRequest(event).headers,
   });
 
   if (!session) {

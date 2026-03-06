@@ -57,7 +57,10 @@ const texts = {
   deleteRelative: "Supprimer le proche"
 };
 
-const persons = ref<Person[]>(await $fetch<Person[]>(`/api/persons?familyId=${familyId}`) || []);
+const persons = ref<Person[]>(await $fetch<Person[]>(`/api/persons?familyId=${familyId}`, {
+  headers: useRequestHeaders(['cookie']) as Record<string, string>,
+  credentials: 'include'
+}).catch(() => []) || []);
 
 const selectedPerson = ref<Person | null>(null);
 
@@ -87,11 +90,15 @@ const handleSavePerson = async (personData: any) => {
       result = await $fetch<Person>("/api/person", {
         method: "PUT",
         body: formData,
+        headers: useRequestHeaders(['cookie']) as Record<string, string>,
+        credentials: 'include'
       });
     } else {
       result = await $fetch<Person>("/api/person", {
         method: "POST",
         body: formData,
+        headers: useRequestHeaders(['cookie']) as Record<string, string>,
+        credentials: 'include'
       });
     }
 
@@ -105,7 +112,10 @@ const handleSavePerson = async (personData: any) => {
         persons.value.push(result);
       }
     } else {
-      persons.value = await $fetch<Person[]>(`/api/persons?familyId=${familyId}`) || [];
+      persons.value = await $fetch<Person[]>(`/api/persons?familyId=${familyId}`, {
+        headers: useRequestHeaders(['cookie']) as Record<string, string>,
+        credentials: 'include'
+      }).catch(() => []) || [];
     }
 
     selectedPerson.value = null;
@@ -119,6 +129,8 @@ const handleDeletePerson = async (id: string) => {
     await $fetch(`/api/person`, {
       method: "DELETE",
       body: { id },
+      headers: useRequestHeaders(['cookie']) as Record<string, string>,
+      credentials: 'include'
     });
     persons.value = persons.value.filter((person: Person) => person._id !== id);
   } catch (err) {
@@ -157,7 +169,7 @@ const handleDeletePerson = async (id: string) => {
   text-decoration: none;
   color: $color-text;
   transition: background 0.2s;
-    height: fit-content;
+  height: fit-content;
 }
 
 .nav-btn:hover {

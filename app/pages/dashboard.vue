@@ -6,7 +6,10 @@ const families = ref<any[]>([]);
 const session = ref<any>(null);
 
 const loadFamilies = async () => {
-    const data = await $fetch<any[]>("/api/families");
+    const data = await $fetch<any[]>("/api/families", {
+        headers: useRequestHeaders(['cookie']) as Record<string, string>,
+        credentials: 'include'
+    }).catch(() => []);
     families.value = data || [];
 };
 
@@ -28,6 +31,8 @@ const handleDeleteFamily = async (family: any) => {
         await $fetch("/api/family", {
             method: "DELETE",
             body: { name: family.name },
+            headers: useRequestHeaders(['cookie']) as Record<string, string>,
+            credentials: 'include'
         });
         await loadFamilies();
     } catch (err) {
@@ -70,7 +75,8 @@ const handleDeleteFamily = async (family: any) => {
                                     class="action-btn delete-btn">Supprimer</button>
                                 <NuxtLink :to="`/tree/${family._id}`" class="action-btn edit-btn">Gérer
                                 </NuxtLink>
-                                <NuxtLink :to="`/famille/${family._id}`" class="action-btn view-btn">Voir l'arbre</NuxtLink>
+                                <NuxtLink :to="`/famille/${family._id}`" class="action-btn view-btn">Voir l'arbre
+                                </NuxtLink>
                             </div>
                         </div>
                     </div>
