@@ -43,14 +43,14 @@ const handleCreateFamily = async () => {
             <div class="auth-box">
                 <div class="auth-stage">
                     <h2>Nouvelle Famille</h2>
-                    <p class="subtitle">Commencez votre lignée en créant un nouvel arbre.</p>
+                    <p class="subtitle">Commencez votre fresque généalogique en créant un nouvel arbre.</p>
                 </div>
 
                 <div class="auth-grid">
                     <form @submit.prevent="handleCreateFamily" class="email-form">
                         <div class="input-genealogy">
                             <label>Nom de la famille</label>
-                            <input type="text" v-model="familyName" placeholder="ex: Les Bourbons, Famille Smith..."
+                            <input type="text" v-model="familyName" placeholder="ex: Famille Dupont"
                                 required :disabled="isLoading" />
                         </div>
 
@@ -61,7 +61,7 @@ const handleCreateFamily = async () => {
                 </div>
 
                 <div class="genealogy-footer">
-                    <p>Vous pourrez ensuite ajouter des membres et définir les relations.</p>
+                    <p>Vous pourrez ensuite ajouter des membres</p>
                 </div>
             </div>
         </main>
@@ -92,6 +92,12 @@ const handleCreateFamily = async () => {
     font-weight: 800;
     font-size: toRem(18);
     letter-spacing: -0.05em;
+}
+
+.genealogy-nav {
+    display: flex;
+    align-items: center;
+    gap: toRem(20);
 }
 
 .nav-btn {

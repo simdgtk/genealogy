@@ -120,6 +120,12 @@ const handleDeleteFamily = async (family: any) => {
     letter-spacing: -0.05em;
 }
 
+.genealogy-nav {
+    display: flex;
+    align-items: center;
+    gap: toRem(20);
+}
+
 .user-email {
     margin-right: toRem(20);
     font-family: $font-mono;

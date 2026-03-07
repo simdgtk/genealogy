@@ -4,7 +4,7 @@ export const Family = defineMongooseModel({
   name: "Family",
   schema: {
     name: { type: String, required: true },
-    creatorId: { type: String, required: true }, // Better Auth User ID
+    creatorId: { type: String, required: true },
     sharedWith: [
       {
         userId: { type: String, required: true },

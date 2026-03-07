@@ -6,7 +6,7 @@ export interface AppConfig {
   tree: TreeOptions;
 }
 
-// pour faire correspondre le chemin de l'arbre à la base de données
+// faire correspondre le chemin de l'arbre à la bdd
 export const getChildren = (persons: any[], parentId: string | null) =>
   persons
     .filter((p: any) => p.parent1Id === parentId)
@@ -73,7 +73,6 @@ export const getTreeConfig = (persons: any[]): TreeOptions => {
         5: 1,
       },
       children: (level: number, path: number[]) => {
-        // On évite de rajouter des enfants sur ces prolongements pour ne pas les dupliquer.
         if (path.length > 0 && path[path.length - 1] === -1) return 0;
 
         const person = getPersonByPath(persons, path);
@@ -137,7 +136,7 @@ export const getTreeConfig = (persons: any[]): TreeOptions => {
 const config: AppConfig = {
   width: 1200,
   height: 600,
-  tree: getTreeConfig([]), // Default empty config
+  tree: getTreeConfig([])
 };
 
 export default config;

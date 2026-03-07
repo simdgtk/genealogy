@@ -175,7 +175,7 @@ const removeShare = async (userId: string) => {
 
 .modal-content {
     background: $color-surface;
-    border: 1px solid $color-border;
+    border: 1px solid $color-text;
     width: 100%;
     max-width: toRem(500);
     max-height: 90vh;
@@ -188,7 +188,7 @@ const removeShare = async (userId: string) => {
     justify-content: space-between;
     align-items: center;
     padding: toRem(20) toRem(24);
-    border-bottom: 1px solid $color-border;
+    border-bottom: 1px solid $color-text;
     background: $color-bg;
 
     h3 {
@@ -214,14 +214,14 @@ const removeShare = async (userId: string) => {
 .subtitle {
     margin-top: 0;
     font-size: toRem(14);
-    color: $color-muted;
+    color: $color-gray1;
     margin-bottom: toRem(16);
 }
 
 .share-list {
     display: flex;
     flex-direction: column;
-    border: 1px solid $color-border;
+    border: 1px solid $color-text;
     margin-bottom: toRem(24);
 }
 
@@ -230,7 +230,7 @@ const removeShare = async (userId: string) => {
     justify-content: space-between;
     align-items: center;
     padding: toRem(12) toRem(16);
-    border-bottom: 1px solid $color-border;
+    border-bottom: 1px solid $color-text;
 
     &:last-child {
         border-bottom: none;
@@ -256,8 +256,8 @@ const removeShare = async (userId: string) => {
     padding: toRem(8);
 
     &.canEdit {
-        background-color: $color-border;
-        color: $white;
+        background-color: $color-text;
+        color: $color-surface;
     }
 
     input {
@@ -284,13 +284,13 @@ const removeShare = async (userId: string) => {
     padding: toRem(20);
     font-style: italic;
     font-size: toRem(13);
-    color: $color-muted;
-    border: 1px dashed $color-border;
+    color: $color-gray1;
+    border: 1px dashed $color-text;
 }
 
 .divider {
     height: 1px;
-    background: $color-border;
+    background: $color-text;
     margin: toRem(24) 0;
 }
 
@@ -309,7 +309,7 @@ h4 {
 .invite-input {
     width: 100%;
     padding: toRem(12);
-    border: 1px solid $color-border;
+    border: 1px solid $color-text;
     background: $color-bg;
     font-family: $font-mono;
     font-size: toRem(14);
@@ -317,7 +317,7 @@ h4 {
 
     &:focus {
         outline: none;
-        border-color: $color-accent;
+        border-color: $color-green;
     }
 }
 
@@ -328,9 +328,9 @@ h4 {
 
 .btn-genealogy-primary {
     padding: toRem(12);
-    background: $color-accent;
+    background: $color-green;
     color: $color-surface;
-    border: 1px solid $color-border;
+    border: 1px solid $color-text;
     font-size: toRem(12);
     font-weight: 800;
     cursor: pointer;
@@ -352,7 +352,7 @@ h4 {
 }
 
 .success-msg {
-    color: $color-accent;
+    color: $color-green;
     font-size: toRem(12);
     margin-top: toRem(12);
 }

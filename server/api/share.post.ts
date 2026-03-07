@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const targetUserId = targetUser._id.toString(); // or targetUser.id depending on better-auth
+    // const targetUserId = targetUser._id.toString(); // or targetUser.id depending on better-auth
 
     // better-auth uses string id field usually, let's get it:
     const finalTargetId = targetUser.id || targetUser._id.toString();

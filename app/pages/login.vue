@@ -61,7 +61,7 @@ const handleSocialSignIn = async (provider: 'github' | 'google') => {
             <div class="auth-box">
                 <div class="auth-stage">
                     <h2>{{ isSignUp ? 'Créer un compte' : 'Se connecter' }}</h2>
-                    <p class="subtitle">{{ isSignUp ? 'Rejoignez le projet genealogique.' : 'Créez votre fresque.' }}
+                    <p class="subtitle">{{ isSignUp ? 'Rejoignez le projet de fresque.' : 'Créez votre fresque.' }}
                     </p>
                 </div>
 

@@ -74,7 +74,6 @@ export class Portrait extends THREE.Group {
   constructor(
     name: string = "test",
     surname: string = "",
-    age: number | string | null = null,
     image: string | null = null,
   ) {
     super();
@@ -107,41 +106,35 @@ export class Portrait extends THREE.Group {
     const textNameStr = `${name || ""} ${surname || ""}`.trim();
     this.textName = this.createText(
       textNameStr !== "" ? textNameStr : " ",
-      0.55,
+      0.45,
       "#000000",
       -0.65,
-    );
-    this.textAge = this.createText(
-      age !== null && age !== undefined && age.toString().trim() !== ""
-        ? age.toString()
-        : " ",
-      0.25,
-      "#000000",
-      0.0,
     );
 
     this.init();
   }
 
-  private createText(
-    content: string,
-    fontSize: number,
-    color: string,
-    y: number,
-  ): Text {
-    const text = new Text();
-    this.add(text);
-    text.text = content;
-    text.fontSize = fontSize;
-    text.color = new THREE.Color(color);
-    text.position.set(0, y, 5);
-    text.font = "/fonts/Aktura-Regular.ttf";
-    text.anchorX = "center";
-    text.position.z += 2;
-    text.position.y += 0.35;
-    text.sync();
-    return text;
-  }
+ private createText(
+  content: string,
+  fontSize: number,
+  color: string,
+  y: number,
+): Text {
+  const text = new Text();
+  this.add(text);
+  text.text = content;
+  text.fontSize = fontSize;
+  text.color = new THREE.Color(color);
+
+  text.font = "/fonts/Aktura-Regular.ttf";
+  text.anchorX = "center";
+  
+  text.position.set(0, y, 7.4);
+  text.position.y += 0.35;
+  
+  text.sync();
+  return text;
+}
 
   init() {}
 

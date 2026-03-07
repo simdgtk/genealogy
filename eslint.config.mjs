@@ -1,6 +1,10 @@
 // @ts-check
-import withNuxt from './.nuxt/eslint.config.mjs'
+import typescriptParser from "@typescript-eslint/parser";
+import withNuxt from "./.nuxt/eslint.config.mjs";
 
-export default withNuxt(
-  // Your custom configs here
-)
+export default withNuxt({
+  files: ["server/**/*.ts"],
+  languageOptions: {
+    parser: typescriptParser,
+  },
+});

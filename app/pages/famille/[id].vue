@@ -124,7 +124,7 @@ onBeforeUnmount(() => {
 
 .nav-btn {
     background: $color-surface;
-    border: 1px solid $color-border;
+    border: 1px solid $color-text;
     padding: toRem(10) toRem(20);
     font-size: toRem(11);
     font-family: $font-sans;
@@ -140,9 +140,9 @@ onBeforeUnmount(() => {
 }
 
 .nav-btn.highlight {
-    background: $color-accent;
+    background: $color-green;
     color: $color-surface;
-    border-color: $color-border;
+    border-color: $color-text;
 }
 
 .nav-btn.highlight:hover {

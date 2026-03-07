@@ -42,7 +42,7 @@ defineEmits<{
     justify-content: space-between;
     align-items: center;
     padding: toRem(16);
-    border-bottom: 1px solid $color-border;
+    border-bottom: 1px solid $color-text;
     transition: background 0.1s;
 }
 
@@ -68,7 +68,7 @@ defineEmits<{
     align-items: center;
     justify-content: center;
     background: $color-bg;
-    border: 1px solid $color-border;
+    border: 1px solid $color-text;
 }
 
 .person-avatar img {
@@ -81,7 +81,7 @@ defineEmits<{
     font-family: $font-mono;
     font-size: toRem(16);
     font-weight: 700;
-    color: $color-muted;
+    color: $color-gray1;
     text-transform: uppercase;
 }
 
@@ -100,7 +100,7 @@ defineEmits<{
     font-size: toRem(10);
     font-weight: 700;
     cursor: pointer;
-    border: 1px solid $color-border;
+    border: 1px solid $color-text;
     transition: background 0.1s, color 0.1s;
 }
 
@@ -115,12 +115,12 @@ defineEmits<{
 }
 
 .btn-delete {
-    background: $color-danger;
+    background: $color-red;
     color: $color-surface;
-    border-color: $color-danger-dark;
+    border-color: $color-red-dark;
 }
 
 .btn-delete:hover {
-    background: $color-danger-dark;
+    background: $color-red-dark;
 }
 </style>

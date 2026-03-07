@@ -128,8 +128,6 @@ export default class Border {
     this.textTop.renderOrder = 1002;
     this.hudCamera.add(this.textTop);
 
-    // this.textTop.material.depthTest = false;
-
     this.textTop.sync();
 
     this.initButtons();
@@ -234,8 +232,8 @@ export default class Border {
     this.smallMeshBottomTop.scale.set(scaleX, 1, 1);
     this.smallMeshBottomBottom.scale.set(scaleX, 1, 1);
 
-    const cameraTop = frustumSize / 2; // 5
-    const cameraBottom = -frustumSize / 2; // -5
+    const cameraTop = frustumSize / 2;
+    const cameraBottom = -frustumSize / 2;
 
     const actualHeight = 0.9;
     const smallHeight = 0.2;

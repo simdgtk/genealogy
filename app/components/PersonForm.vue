@@ -84,7 +84,6 @@ const form = ref<Partial<Person> & { image: File | null }>({
 const fileInput = ref<HTMLInputElement | null>(null)
 
 watch(() => props.person, (newPerson) => {
-    // Reset le champ fichier visuellement à chaque changement de personne
     if (fileInput.value) {
         fileInput.value.value = ''
     }
@@ -123,10 +122,8 @@ const handleFileUpload = (event: Event) => {
 }
 
 const handleSubmit = () => {
-    // On envoie les données au parent (index.vue)
     emit('submit', { ...form.value })
 
-    // On remet le formulaire à zéro
     form.value = {
         surname: "",
         name: "",
@@ -138,7 +135,6 @@ const handleSubmit = () => {
         image: null,
     }
 
-    // On vide l'input de type file visuellement
     if (fileInput.value) {
         fileInput.value.value = ''
     }
@@ -205,7 +201,7 @@ const handleSubmit = () => {
 }
 
 .submit-btn {
-    background: $color-accent;
+    background: $color-green;
     color: $color-surface;
 }
 

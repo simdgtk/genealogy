@@ -202,13 +202,19 @@ const handleDeletePerson = async (id: string) => {
   justify-content: space-between;
   align-items: center;
   padding: 0 toRem(40);
-  border-bottom: 1px solid $color-border;
+  border-bottom: 1px solid $color-text;
   background: $color-bg;
+}
+
+.genealogy-nav {
+  display: flex;
+  align-items: center;
+  gap: toRem(20);
 }
 
 .nav-btn {
   background: transparent;
-  border: 1px solid $color-border;
+  border: 1px solid $color-text;
   padding: toRem(8) toRem(16);
   font-size: toRem(11);
   font-weight: 700;
@@ -225,9 +231,9 @@ const handleDeletePerson = async (id: string) => {
 
 .btn-genealogy-primary {
   padding: toRem(8) toRem(16);
-  background: $color-accent;
+  background: $color-green;
   color: $color-surface;
-  border: 1px solid $color-border;
+  border: 1px solid $color-text;
   font-size: toRem(11);
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -269,7 +275,7 @@ const handleDeletePerson = async (id: string) => {
 
 .subtitle {
   font-size: toRem(16);
-  color: $color-muted;
+  color: $color-gray1;
   margin-top: toRem(12);
 }
 
@@ -281,7 +287,7 @@ const handleDeletePerson = async (id: string) => {
 
 .auth-grid {
   background: $color-surface;
-  border: 1px solid $color-border;
+  border: 1px solid $color-text;
   padding: toRem(40);
 }
 
@@ -306,7 +312,7 @@ const handleDeletePerson = async (id: string) => {
   display: block;
   font-family: $font-mono;
   font-size: toRem(12);
-  color: $color-accent;
+  color: $color-green;
   margin-bottom: toRem(24);
 }
 

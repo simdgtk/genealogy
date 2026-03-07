@@ -5,7 +5,7 @@ import { Billboard, TreeType } from "./enums";
 import TreeOptions from "./options";
 import { getBarkTexture } from "./textures";
 import { Trellis } from "./trellis";
-import { Portrait } from "./portrait";
+import { Portrait } from "./Portrait";
 
 export class Tree extends THREE.Group {
   /**
@@ -143,31 +143,6 @@ export class Tree extends THREE.Group {
 
     let sectionOrientation = branch.orientation.clone();
     let sectionOrigin = branch.origin.clone();
-
-    // créer un cube à l'origine de la branche
-    // const portrait = new Portrait();
-
-    let color = 0xffffff;
-    switch (branch.level) {
-      case 0:
-        color = 0xff0000;
-        break;
-      case 1:
-        color = 0x00ff00;
-        break;
-      case 2:
-        color = 0x0000ff;
-        break;
-      case 3:
-        color = 0xffff00;
-        break;
-      case 4:
-        color = 0xff00ff;
-        break;
-      case 5:
-        color = 0x00ffff;
-        break;
-    }
 
     let sectionLength =
       branch.length /
@@ -308,7 +283,6 @@ export class Tree extends THREE.Group {
       const portrait = new Portrait(
         metadata.name,
         metadata.surname,
-        metadata.age,
         metadata.image,
       );
 
@@ -507,7 +481,7 @@ export class Tree extends THREE.Group {
    * @returns
    */
   generateLeaves(sections) {
-    const radialOffset = this.rng.random();
+    // const radialOffset = this.rng.random();
 
     for (let i = 0; i < this.options.leaves.count; i++) {
       // Determine how far along the length of the parent
@@ -531,35 +505,35 @@ export class Tree extends THREE.Group {
         (1 / (sections.length - 1));
 
       // Linearly interpolate origin from section A to section B
-      const leafOrigin = new THREE.Vector3().lerpVectors(
-        sectionA.origin,
-        sectionB.origin,
-        alpha,
-      );
+      // const leafOrigin = new THREE.Vector3().lerpVectors(
+      //   sectionA.origin,
+      //   sectionB.origin,
+      //   alpha,
+      // );
 
       // Linearlly interpolate the orientation
-      const qA = new THREE.Quaternion().setFromEuler(sectionA.orientation);
-      const qB = new THREE.Quaternion().setFromEuler(sectionB.orientation);
-      const parentOrientation = new THREE.Euler().setFromQuaternion(
-        qB.slerp(qA, alpha),
-      );
+      // const qA = new THREE.Quaternion().setFromEuler(sectionA.orientation);
+      // const qB = new THREE.Quaternion().setFromEuler(sectionB.orientation);
+      // const parentOrientation = new THREE.Euler().setFromQuaternion(
+      //   qB.slerp(qA, alpha),
+      // );
 
       // Calculate the angle offset from the parent branch and the radial angle
-      const radialAngle =
-        2.0 * Math.PI * (radialOffset + i / this.options.leaves.count);
-      const q1 = new THREE.Quaternion().setFromAxisAngle(
-        new THREE.Vector3(1, 0, 0),
-        this.options.leaves.angle / (180 / Math.PI),
-      );
-      const q2 = new THREE.Quaternion().setFromAxisAngle(
-        new THREE.Vector3(0, 1, 0),
-        radialAngle,
-      );
-      const q3 = new THREE.Quaternion().setFromEuler(parentOrientation);
+      // const radialAngle =
+      //   2.0 * Math.PI * (radialOffset + i / this.options.leaves.count);
+      // const q1 = new THREE.Quaternion().setFromAxisAngle(
+      //   new THREE.Vector3(1, 0, 0),
+      //   this.options.leaves.angle / (180 / Math.PI),
+      // );
+      // const q2 = new THREE.Quaternion().setFromAxisAngle(
+      //   new THREE.Vector3(0, 1, 0),
+      //   radialAngle,
+      // );
+      // const q3 = new THREE.Quaternion().setFromEuler(parentOrientation);
 
-      const leafOrientation = new THREE.Euler().setFromQuaternion(
-        q3.multiply(q2.multiply(q1)),
-      );
+      // const leafOrientation = new THREE.Euler().setFromQuaternion(
+      //   q3.multiply(q2.multiply(q1)),
+      // );
 
       // this.generateLeaf(leafOrigin, leafOrientation);
     }
@@ -746,15 +720,6 @@ vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {
     g.computeVertexNormals();
     g.computeBoundingSphere();
 
-    // const mat = new THREE.MeshToonMaterial({
-    //   name: "leaves",
-    //   map: getLeafTexture(this.options.leaves.type), // Re-enable texture map
-    //   // color: new THREE.Color(this.options.leaves.tint),
-    //   side: THREE.DoubleSide,
-    //   alphaTest: this.options.leaves.alphaTest,
-    //   // gradientMap: this.getGradientTexture(), // Use generated gradient map
-    // });
-
     const mat = new THREE.MeshToonMaterial({
       name: "leaves",
       color: new THREE.Color(0x00ff00),
@@ -871,24 +836,15 @@ vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {
     return (this.branches.indices.length + this.leaves.indices.length) / 3;
   }
 
-  /**
-   * Update the portraits to face the camera
-   * @param {THREE.Quaternion} rotation
-   */
+  /* rotation des portraits pour faire face à la caméra */
   updatePortraits(rotation) {
     if (this.portraits) {
-      // Create a temporary quaternion to hold the inverse of the parent's world rotation
+      // quaternion pour l'inverse de la rotation du parent
       const parentWorldQuat = new THREE.Quaternion();
       this.getWorldQuaternion(parentWorldQuat);
       const invParent = parentWorldQuat.invert();
 
       this.portraits.forEach((portrait) => {
-        // We want the portrait's world rotation to match the camera's rotation.
-        // If the portrait is a child of this tree, its local rotation needs to be composed properly.
-        // We want: portrait.worldQuat == camera.quat
-        // Since portrait.worldQuat = parent.worldQuat * portrait.localQuat
-        // portrait.localQuat = inv(parent.worldQuat) * camera.quat
-
         portrait.quaternion.copy(invParent).multiply(rotation);
       });
     }
