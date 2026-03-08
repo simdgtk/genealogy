@@ -5,7 +5,7 @@ import { Billboard, TreeType } from "./enums";
 import TreeOptions from "./options";
 import { getBarkTexture } from "./textures";
 import { Trellis } from "./trellis";
-import { Portrait } from "./Portrait";
+import { Portrait } from "./portrait";
 
 export class Tree extends THREE.Group {
   /**
