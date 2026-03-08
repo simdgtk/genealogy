@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Text } from "troika-three-text";
 import { CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import Tree from "~/webgl/components/Tree";
 
 export default class Border {
   hudCamera: THREE.OrthographicCamera;
@@ -9,6 +10,7 @@ export default class Border {
   meshTop!: THREE.Mesh;
   textTop!: Text;
   meshBottom!: THREE.Mesh;
+  tree!: Tree;
 
   smallMeshTopTop!: THREE.Mesh;
   smallMeshTopBottom!: THREE.Mesh;
@@ -32,12 +34,14 @@ export default class Border {
     controls: OrbitControls,
     zOffset: number = -5,
     familyName: string,
+    tree: Tree,
   ) {
     this.hudCamera = hudCamera;
     this.mainCamera = mainCamera;
     this.controls = controls;
     this.zOffset = zOffset;
     this.familyName = familyName;
+    this.tree = tree;
     this.init();
   }
 
@@ -142,8 +146,8 @@ export default class Border {
     buttonsDiv.style.pointerEvents = "auto";
 
     const btnFlex = document.createElement("div");
-    btnFlex.style.display = "grid";
-    btnFlex.style.gridTemplateColumns = "1fr 1fr";
+    btnFlex.style.display = "flex";
+    btnFlex.style.flexDirection = "column";
     btnFlex.style.columnGap = "4px";
     btnFlex.style.rowGap = "8px";
     btnFlex.style.pointerEvents = "auto";
@@ -157,6 +161,7 @@ export default class Border {
     const svgMinus = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#000000" viewBox="0 0 256 256"><path d="M152,112a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h64A8,8,0,0,1,152,112Zm77.66,117.66a8,8,0,0,1-11.32,0l-50.06-50.07a88.11,88.11,0,1,1,11.31-11.31l50.07,50.06A8,8,0,0,1,229.66,229.66ZM112,184a72,72,0,1,0-72-72A72.08,72.08,0,0,0,112,184Z"></path></svg>`;
     const svgUp = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#000000" viewBox="0 0 256 256"><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,176H48V48H208V208Zm-42.34-77.66a8,8,0,0,1,0,11.32l-32,32a8,8,0,0,1-11.32,0l-32-32a8,8,0,0,1,11.32-11.32L120,148.69V88a8,8,0,0,1,16,0v60.69l18.34-18.35A8,8,0,0,1,165.66,130.34Z"></path></svg>`;
     const svgDown = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#000000" viewBox="0 0 256 256"><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,176H48V48H208ZM90.34,125.66a8,8,0,0,1,0-11.32l32-32a8,8,0,0,1,11.32,0l32,32a8,8,0,0,1-11.32,11.32L136,107.31V168a8,8,0,0,1-16,0V107.31l-18.34,18.35A8,8,0,0,1,90.34,125.66Z"></path></svg>`;
+    const svgSeed = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#000000" viewBox="0 0 256 256"><path d="M237.66,178.34a8,8,0,0,1,0,11.32l-24,24a8,8,0,0,1-11.32-11.32L212.69,192H200.94a72.12,72.12,0,0,1-58.59-30.15l-41.72-58.4A56.1,56.1,0,0,0,55.06,80H32a8,8,0,0,1,0-16H55.06a72.12,72.12,0,0,1,58.59,30.15l41.72,58.4A56.1,56.1,0,0,0,200.94,176h11.75l-10.35-10.34a8,8,0,0,1,11.32-11.32ZM143,107a8,8,0,0,0,11.16-1.86l1.2-1.67A56.1,56.1,0,0,1,200.94,80h11.75L202.34,90.34a8,8,0,0,0,11.32,11.32l24-24a8,8,0,0,0,0-11.32l-24-24a8,8,0,0,0-11.32,11.32L212.69,64H200.94a72.12,72.12,0,0,0-58.59,30.15l-1.2,1.67A8,8,0,0,0,143,107Zm-30,42a8,8,0,0,0-11.16,1.86l-1.2,1.67A56.1,56.1,0,0,1,55.06,176H32a8,8,0,0,0,0,16H55.06a72.12,72.12,0,0,0,58.59-30.15l1.2-1.67A8,8,0,0,0,113,149Z"></path></svg>`;
 
     const createBtn = (svg: string) => {
       const btn = document.createElement("button");
@@ -175,6 +180,8 @@ export default class Border {
       btn.onmouseleave = () => (btn.style.transform = "scale(1)");
       return btn;
     };
+
+    const btnSeed = createBtn(svgSeed)
 
     const btnPlusEl = createBtn(svgPlus);
     const btnMinusEl = createBtn(svgMinus);
@@ -208,10 +215,16 @@ export default class Border {
       this.mainCamera.updateProjectionMatrix();
     });
 
+    btnSeed.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+      this.tree.randomizeSeed();
+    });
+
     btnFlex.appendChild(btnPlusEl);
     btnFlex.appendChild(btnMinusEl);
     btnFlex.appendChild(btnDownEl);
     btnFlex.appendChild(btnUpEl);
+    btnFlex.appendChild(btnSeed);
 
     this.buttonsContainer = new CSS2DObject(buttonsDiv);
     this.hudCamera.add(this.buttonsContainer);

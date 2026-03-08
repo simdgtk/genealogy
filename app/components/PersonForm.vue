@@ -166,7 +166,7 @@ const handleSubmit = () => {
 .input-genealogy input,
 .input-genealogy select {
     padding: toRem(14);
-    border: 1px solid $color-border;
+    border: 1px solid $color-text;
     font-size: toRem(14);
     outline: none;
     background: $color-surface;
@@ -195,7 +195,7 @@ const handleSubmit = () => {
     font-weight: 800;
     letter-spacing: 0.05em;
     cursor: pointer;
-    border: 1px solid $color-border;
+    border: 1px solid $color-text;
     transition: filter 0.1s, background 0.1s;
     flex: 1;
 }

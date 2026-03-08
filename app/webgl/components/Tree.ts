@@ -54,6 +54,11 @@ export default class Tree {
     this.scene.add(this.instance);
   }
 
+  randomizeSeed() {
+    this.instance.options.seed = Math.floor(Math.random() * 1000000);
+    this.instance.generate();
+  }
+
   update(delta: number, rotation: THREE.Quaternion) {
     if (this.instance) {
       this.instance.animate();

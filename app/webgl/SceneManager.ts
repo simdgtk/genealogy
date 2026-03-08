@@ -125,6 +125,7 @@ export default class SceneManager {
       this.controls,
       -1,
       "Dupont",
+      this.tree,
     );
   }
 
